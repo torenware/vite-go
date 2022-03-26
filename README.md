@@ -1,3 +1,81 @@
 # Vite Integration For Go
 
-This is a placeholder README for a Vite integration module.
+A simple module that lets you serve your Vue 3 project from a Go-based web server.  You build your project, tell Go where to find the `dist/` directory, and the module figures out how to load the generated Vue application into a web page. Right now, the only configuration is the `manifest.json` from your Vue build.
+
+## Installation
+
+```
+
+go get github.com/torenware/vite-go
+
+```
+
+## Getting It Into Your Go Project
+
+You need to expose the `dist/` directory so Go can find your generated assets for the Vue project, and the `manifest.json` file that describes it.  Here's some pseudo-ish sample code that uses the go 1.16+ embedding feature:
+
+```go
+
+package main
+
+import (
+  embed
+  vueglue "github.com/torenware/vite-go"
+)
+
+//go:embed "dist"
+var dist embed.FS
+
+func main() {
+  // Parse the manifest and get a struct that describes
+  // where the assets are.
+  glue, err := vueglue.NewVueGlue(dist, "dist")
+  if err != nil {
+    //bail!
+  }
+  
+  // Now you can pass the glue object to an HTML template
+  ts, err := template.ParseFiles("path/to/your-template.tmpl")
+  if err != nil {
+  	// better handle this...
+  }
+  
+  // and in your handler code
+  ts.Execute(respWriter, glue)
+}
+
+
+```
+
+Your template gets the needed tags and links something like this:
+
+```html
+<!doctype html>
+<html lang='en'>
+{{ $vue := . }}
+    <head>
+        <meta charset='utf-8'>
+        <title>Home - Vue Loader Test</title>
+        {{ if $vue }}
+          {{ $vue.RenderTags }}
+        {{ end }}
+    </head>
+    <body>
+      <div id="app"></div>
+      
+    </body>
+  </html>
+      
+ 
+```
+
+## Caveats
+
+This code is a proof of concept, and while it works in my sample application, it may not work for you :-) I've posted the code so people can see it, and kick the tires on it. It's no where near production ready, and, well, it may bite.
+
+
+
+Copyright © 2022 Rob Thorne
+
+[MIT License](https://github.com/torenware/go-tooling-for-vue/blob/8999977a5bffb8f0630740220c576b550a7115e9/LICENSE.md)
+<hr>
