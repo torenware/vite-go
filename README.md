@@ -12,53 +12,93 @@ go get github.com/torenware/vite-go
 
 ## Getting It Into Your Go Project
 
-You need to expose the `dist/` directory so Go can find your generated assets for the Vue project, and the `manifest.json` file that describes it.  Here's some pseudo-ish sample code that uses the go 1.16+ embedding feature:
+You need to expose the `dist/` directory so Go can find your generated assets for the Vue project, and the `manifest.json` file that describes it. You may need to change your `vite.config.ts` file to make sure the manifest file is generated, and to put the `dist` directory where Go needs it to be. Here's what I'm using:
 
-```go
+```typescript
+/**
+ * @type {import('vite').UserConfig}
+ */
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+  plugins: [vue()],
+  build: {
+    outDir: 'cmd/web/dist',
+    sourcemap: true,
+    manifest: true,
+    rollupOptions: {
+      input: {
+        main: 'src/main.ts',
+      },
+    },
+  },
+});
+```  
+
+
+
+Here's some pseudo-ish sample code that uses the go 1.16+ embedding feature:
+
+```golang
 
 package main
 
 import (
-  embed
+  "embed"
+  "html/template"
+  "net/http"
+
   vueglue "github.com/torenware/vite-go"
 )
 
 //go:embed "dist"
 var dist embed.FS
 
+var vueGlue *vueglue.VueGlue
+
 func main() {
   // Parse the manifest and get a struct that describes
   // where the assets are.
-  glue, err := vueglue.NewVueGlue(dist, "dist")
+  glue, err := vueglue.NewVueGlue(&dist, "dist")
   if err != nil {
     //bail!
   }
+  vueGlue = glue
   
+  // and set up your routes and start your server....
+  
+}
+
+func MyHandler(w http.ResponseWriter, r *http.Request) {
   // Now you can pass the glue object to an HTML template
   ts, err := template.ParseFiles("path/to/your-template.tmpl")
   if err != nil {
   	// better handle this...
   }
-  
-  // and in your handler code
-  ts.Execute(respWriter, glue)
+  ts.Execute(respWriter, vueGlue)
+
 }
 
 
 ```
 
+
 Your template gets the needed tags and links something like this:
 
-```html
+
+```HTML
 <!doctype html>
 <html lang='en'>
 {{ $vue := . }}
     <head>
         <meta charset='utf-8'>
         <title>Home - Vue Loader Test</title>
+        
         {{ if $vue }}
           {{ $vue.RenderTags }}
         {{ end }}
+        
     </head>
     <body>
       <div id="app"></div>
