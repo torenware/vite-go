@@ -10,6 +10,9 @@ dist: vue-install vite.config.ts src public package.json
 
 dist/manifest.json: dist
 
-run: dist/manifest.json dist/assets test-template.tmpl
+go.sum:
+	@go get vitemodtest
+
+run: go.sum dist/manifest.json dist/assets test-template.tmpl
 	@go run .
 
