@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang='en'>
+{{ $vue := . }}
+    <head>
+        <meta charset='utf-8'>
+        <title>Sample Vite-Go Page</title>
+        {{ if $vue }}
+          {{ $vue.RenderTags }}
+        {{ end }}
+    </head>
+    <body>
+      <div class="container">
+        <header>
+            <h1>Embedding Vue 3 Apps Using Go</h1>
+        </header>
+        <nav>
+            <a href="/">Home</a>
+        </nav>
+        <main>
+          <p>
+          This webapp embeds Vue 3 components, and injects them into
+          pages served by a simple golang web server. The code uses
+          <a href="https://github.com/torenware/vite-go">
+            this module, from up on Github
+          </a>.
+          </p>
+
+          {{ if $vue }}
+          <div id="app"></div>
+          {{ end }}
+        </main>
+        </div>
+    </body>
+</html>
