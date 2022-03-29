@@ -36,6 +36,23 @@ export default defineConfig({
 });
 ```  
 
+This, however, more than you need. A minimal config file would be:
+
+```javascript
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [vue()],
+  build: {
+    manifest: "manifest.json",
+  },
+})
+
+```
+
+The essential piece here is the vue plugin and the `build.manifest` line, since `vite-go` needs the manifest file to be present in order to work correctly.
 
 
 Here's some pseudo-ish sample code that uses the go 1.16+ embedding feature:
@@ -108,6 +125,8 @@ Your template gets the needed tags and links something like this:
       
  
 ```
+
+The sample program in `examples/sample-program` has more details, and actually runs.
 
 ## Caveats
 

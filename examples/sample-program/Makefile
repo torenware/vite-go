@@ -1,4 +1,10 @@
 INSTALL_ONCE=src public package.json
+CONFIG_FILE := vite.config.ts
+
+ifneq (, $(wildcard ./vite.config.js))
+  # if this is present, use it for config.
+  CONFIG_FILE := vite.config.js
+endif
 
 $(INSTALL_ONCE): run-install-check
 	:
@@ -6,7 +12,7 @@ $(INSTALL_ONCE): run-install-check
 run-install-check:
 	./install-vue.sh
 
-dist: vite.config.ts src public package.json
+dist: $(CONFIG_FILE) src public package.json
 	@echo "run build..."
 	@npm run build
 
