@@ -1,6 +1,16 @@
+# These are normally all in SCM, but for our
+# sample program, I want all of these automatically generated:
+
 public
 src
 vue-temp
-go.sum
 package-lock.json
 package.json
+go.mod
+go.sum
+
+
+
+
+
+
