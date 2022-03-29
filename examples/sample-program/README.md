@@ -1,6 +1,12 @@
 # Test Program for the Vite-Go Module
 
-Here's a very simple program to demonstrate the module. To run it, just do:
+Here's a very simple program to demonstrate the module. To run it, first add your Vue files. To automatically install the Vue "starter project" on Mac or Linux, you can run the command. The command will put Vue's various pieces in the right places for the test program.
+
+```shell
+$ ./install-vue.sh
+```
+
+Once you have your Vue files installed, just run the make script to build your Vue project, compile the test program and run it:
 
 ```shell
 $ make run
@@ -8,9 +14,8 @@ $ make run
 
 The makefile will do the following:
 
-1. Copy down the latest starter files for Vue 3 and its Vite 2 build tools.
-2. Build a `dist/` directory from the starter app.
-3. Run the Go web server in `main.go` and post a sample page at [http://localhost:4000](http://localhost:4000).
+1. Build a `dist/` directory from the starter app.
+2. Run the Go web server in `main.go` and post a sample page at [http://localhost:4000](http://localhost:4000).
 
 The files demonstrate the basics of using vite-go in your go program:
 

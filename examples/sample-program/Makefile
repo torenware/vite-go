@@ -1,14 +1,10 @@
+INSTALL_ONCE=src public package.json
 
-vue-install:
-	@npm create vite@latest vue-temp -- --template vue
-	@cd vue-temp; cp -r src public package.json ..
-	@rm -r vue-temp
-	@npm install
-
-dist: vue-install vite.config.ts src public package.json
+dist: vite.config.ts src public package.json
+	@echo "run build..."
 	@npm run build
 
-dist/manifest.json: dist
+dist/manifest.json dist/assets: dist
 
 go.mod:
 	@go mod init vitemodtest
@@ -18,4 +14,5 @@ go.sum: go.mod
 
 run: go.sum dist/manifest.json dist/assets test-template.tmpl
 	@go run .
+
 
