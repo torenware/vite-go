@@ -1,5 +1,7 @@
 # Test Program for the Vite-Go Module
 
+![Sample program page](./sample-program.png)
+
 Here's a very simple program to demonstrate the module. To run it, first add your Vue files. To automatically install the Vue "starter project" on Mac or Linux, you can run the command. The command will put Vue's various pieces in the right places for the test program.
 
 ```shell

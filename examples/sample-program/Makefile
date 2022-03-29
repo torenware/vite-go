@@ -1,5 +1,11 @@
 INSTALL_ONCE=src public package.json
 
+$(INSTALL_ONCE): run-install-check
+	:
+
+run-install-check:
+	./install-vue.sh
+
 dist: vite.config.ts src public package.json
 	@echo "run build..."
 	@npm run build
