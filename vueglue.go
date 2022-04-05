@@ -76,7 +76,8 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 	if config.Environment == "production" {
 		// embed behaves a little strange: it does
 		// not set the top level dir as the "current"
-		// dir for the FS. So give it a clue:
+		// dir for the FS. So give it a clue.
+		// @see https://github.com/golang/go/issues/43431
 		prefix := ""
 		if _, ok := config.FS.(embed.FS); ok {
 			log.Println("we are using an embed")
