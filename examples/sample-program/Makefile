@@ -7,6 +7,7 @@ GO_APP_PORT=4000
 clean:
 	@echo Cleaning up...
 	@- rm -r test_program dist
+	@echo cleaned.
 
 ifneq (, $(wildcard ./vite.config.js))
   # if this is present, use it for config.
@@ -19,9 +20,9 @@ $(INSTALL_ONCE): run-install-check
 run-install-check:
 	./install-vue.sh
 
-dist: $(CONFIG_FILE) src public package.json
+dist: $(CONFIG_FILE) $(JS_DIR)
 	@echo "run javascript build..."
-	@npm run build
+	@cd $(JS_DIR); npm run build
 
 dist/manifest.json dist/assets: dist
 
@@ -33,7 +34,8 @@ go.sum: go.mod
 
 dev: go.sum $(JS_DIR)
 	@echo starting dev server
-	@npm run dev &
+	@-pkill -SIGTERM -f "npm run dev"
+	@cd $(JS_DIR); npm run dev &
 	@go run .
 
 build: clean go.sum dist/manifest.json dist/assets test-template.tmpl

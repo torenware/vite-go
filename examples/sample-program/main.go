@@ -23,7 +23,7 @@ func GuardedFileServer(prefix, stripPrefix, serveDir string) http.Handler {
 		prefixLen := len(stripPrefix)
 		rest := r.URL.Path[prefixLen:]
 		parts := strings.Split(rest, "/")
-		// We want to prevent dot files
+		// We want to prevent dot files from getting served.
 		if parts[len(parts)-1][:1] == "." {
 			//force a relative link.
 			log.Printf("Found dotfile or dir %s", parts[0])
@@ -45,7 +45,6 @@ func ServeVueAssets(mux *http.ServeMux, prefix, stripPrefix, serveDir string) er
 
 func logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("log called")
 		log.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
 		next.ServeHTTP(w, r)
 	})

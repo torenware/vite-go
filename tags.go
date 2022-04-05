@@ -3,14 +3,12 @@ package vueglue
 import (
 	"bytes"
 	"html/template"
-	"log"
 )
 
 // RenderTags genarates the HTML tags that link a rendered
 // Go template with any Vue assets that need to be loaded.
 func (vg *VueGlue) RenderTags() (template.HTML, error) {
 	var tags string
-	log.Println("glue tags", vg)
 
 	if vg.Environment == "development" {
 		tags = `
