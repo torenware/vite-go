@@ -9,15 +9,10 @@ package.json
 go.mod
 go.sum
 
-
 # built by script
 frontend
 
 __debug_bin
 .vscode
 vitemodtest
-
-
-
-
-
+test_program

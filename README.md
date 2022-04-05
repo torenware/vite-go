@@ -55,7 +55,7 @@ export default defineConfig({
 The essential piece here is the vue plugin and the `build.manifest` line, since `vite-go` needs the manifest file to be present in order to work correctly.
 
 
-Here's some pseudo-ish sample code that uses the go 1.16+ embedding feature:
+Here's some pseudo sample code that uses the go 1.16+ embedding feature:
 
 ```golang
 
@@ -75,9 +75,29 @@ var dist embed.FS
 var vueGlue *vueglue.VueGlue
 
 func main() {
+    
+    // This:
+    
+    // Production configuration.
+	config := &vueglue.ViteConfig{
+		Environment: "production",
+		AssetsPath:  "dist",
+		EntryPoint:  "src/main.js",
+		FS:          os.DirFS(dist),
+	}
+
+    // OR this:     
+    // Development configuration
+	config := &vueglue.ViteConfig{
+		Environment: "development",
+		AssetsPath:  "frontend",
+		EntryPoint:  "src/main.js",
+		FS:          os.DirFS("frontend"),
+	}
+
   // Parse the manifest and get a struct that describes
   // where the assets are.
-  glue, err := vueglue.NewVueGlue(&dist, "dist")
+  glue, err := vueglue.NewVueGlue(config)
   if err != nil {
     //bail!
   }
@@ -126,7 +146,7 @@ Your template gets the needed tags and links something like this:
  
 ```
 
-The sample program in `examples/sample-program` has more details, and actually runs.
+The sample program in `examples/sample-program` has much more detail, and actually runs.
 
 ## Caveats
 

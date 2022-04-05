@@ -21,10 +21,8 @@ func GuardedFileServer(prefix, stripPrefix, serveDir string) http.Handler {
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		prefixLen := len(stripPrefix)
-
 		rest := r.URL.Path[prefixLen:]
 		parts := strings.Split(rest, "/")
-		log.Println(parts)
 		// We want to prevent dot files
 		if parts[len(parts)-1][:1] == "." {
 			//force a relative link.
@@ -46,8 +44,8 @@ func ServeVueAssets(mux *http.ServeMux, prefix, stripPrefix, serveDir string) er
 }
 
 func logRequest(next http.Handler) http.Handler {
-	log.Println("invoked log handler")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("log called")
 		log.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
 		next.ServeHTTP(w, r)
 	})
@@ -67,6 +65,7 @@ func main() {
 	flag.StringVar(&environment, "env", "development", "development|production")
 	flag.StringVar(&assets, "assets", "frontend", "location of javascript files. dist for production.")
 	flag.StringVar(&jsEntryPoint, "entryp", "src/main.js", "relative path of the entry point of the js app.")
+	flag.Parse()
 
 	// We pass the file system with the built Vue
 	// program, and the path from the root of that
@@ -98,29 +97,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", pageWithAVue)
 
-	// Add a static file server for our Vue related elements
-	// sub, err := fs.Sub(config.FS, "frontend")
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
-	// log.Println("sub", sub)
-
-	// fss, err := .Open(".")
-	// if err != nil {
-	// 	log.Println("could not open httpFS", err)
-	// 	return
-	// }
-	// finfo, err := fss.Readdir(0)
-	// if err != nil {
-	// 	log.Println(err)
-	// } else {
-	// 	for _, entry := range finfo {
-	// 		log.Println(entry.Name())
-	// 	}
-
-	// }
-
-	err = ServeVueAssets(mux, "/src/", "/", "frontend")
+	err = ServeVueAssets(mux, config.URLPrefix, "/", config.AssetsPath)
 	if err != nil {
 		log.Println("setting up FS failed:", err)
 	}

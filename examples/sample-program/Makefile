@@ -1,5 +1,12 @@
-INSTALL_ONCE=src public package.json
+JS_DIR=frontend
+INSTALL_ONCE=$(JS_DIR)
 CONFIG_FILE := vite.config.ts
+VITE_PORT=3000
+GO_APP_PORT=4000
+
+clean:
+	@echo Cleaning up...
+	@- rm -r test_program dist
 
 ifneq (, $(wildcard ./vite.config.js))
   # if this is present, use it for config.
@@ -13,7 +20,7 @@ run-install-check:
 	./install-vue.sh
 
 dist: $(CONFIG_FILE) src public package.json
-	@echo "run build..."
+	@echo "run javascript build..."
 	@npm run build
 
 dist/manifest.json dist/assets: dist
@@ -24,7 +31,18 @@ go.mod:
 
 go.sum: go.mod
 
-build: go.sum dist/manifest.json dist/assets test-template.tmpl
-	@go build .
+dev: go.sum $(JS_DIR)
+	@echo starting dev server
+	@npm run dev &
+	@go run .
+
+build: clean go.sum dist/manifest.json dist/assets test-template.tmpl
+	@echo building go binary...
+	@go build -o test_program .
+
+preview: build
+	@echo run test_program
+	@ ./test_program -env production -assets dist
+
 
 

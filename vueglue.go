@@ -1,10 +1,7 @@
 package vueglue
 
 import (
-	"encoding/json"
-	"fmt"
 	"io/fs"
-	"path/filepath"
 )
 
 // type ViteConfig passes info needed to generate the library's
@@ -14,13 +11,17 @@ type ViteConfig struct {
 	// FS is the filesystem where assets can be loaded.
 	FS fs.FS
 
-	// Environment (development|production)
+	// Environment (development|production). In development mode,
+	// the package sets up hot reloading. In production, the
+	// package builds the Vue/Vuex production files and embeds them
+	// in the Go app.
 	Environment string
 
-	//AssetsPath (typically dist/assets for prod, src for dev)
+	//AssetsPath (typically dist for prod, and your Vue project
+	// directory for dev)
 	AssetsPath string
 
-	// URLPrefix (assets/ for prod, src/ for dev)
+	// URLPrefix (/assets/ for prod, /src/ for dev)
 	URLPrefix string
 
 	// Entry point: as configured in vite.config.js. Typically
@@ -45,13 +46,9 @@ type VueGlue struct {
 	// Bundled CSS
 	CSSModule []string
 
-	// I use a 'data-entryp' attribute to find what
-	// components to load. Lookup is in the entry point JS.
-	// This makes the info easily available in templates.
-	MountPoint string
-
-	// An embed that points to the Vue/Vite dist
-	// directory.
+	// A file system or embed that points to the Vue/Vite dist
+	// directory (production) or the javascript src directory
+	// (development)
 	DistFS fs.FS
 }
 
@@ -68,7 +65,6 @@ func ParseManifest(contents []byte) (*VueGlue, error) {
 // NewVueGlue finds the manifest in the supplied file system
 // and returns a glue object.
 func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
-	var err error
 	var glue *VueGlue
 	glue = &VueGlue{}
 
@@ -77,7 +73,7 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 
 	if config.Environment == "production" {
 		// Get the manifest file
-		manifestFile := filepath.Join(config.AssetsPath, "manifest.json")
+		manifestFile := "manifest.json"
 		contents, err := fs.ReadFile(config.FS, manifestFile)
 		if err != nil {
 			return nil, err
@@ -91,16 +87,5 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 		glue.MainModule = config.EntryPoint
 	}
 
-	output, _ := json.MarshalIndent(glue, "", "  ")
-	fmt.Println(string(output))
-
-	tags, err := glue.RenderTags()
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-	fmt.Println(tags)
-
 	return glue, nil
-
 }
