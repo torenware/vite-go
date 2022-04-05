@@ -1,7 +1,9 @@
 package vueglue
 
 import (
+	"embed"
 	"io/fs"
+	"log"
 )
 
 // type ViteConfig passes info needed to generate the library's
@@ -72,8 +74,16 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 	glue.DistFS = config.FS
 
 	if config.Environment == "production" {
+		// embed behaves a little strange: it does
+		// not set the top level dir as the "current"
+		// dir for the FS. So give it a clue:
+		prefix := ""
+		if _, ok := config.FS.(embed.FS); ok {
+			log.Println("we are using an embed")
+			prefix = config.AssetsPath + "/"
+		}
 		// Get the manifest file
-		manifestFile := "manifest.json"
+		manifestFile := prefix + "manifest.json"
 		contents, err := fs.ReadFile(config.FS, manifestFile)
 		if err != nil {
 			return nil, err
