@@ -7,8 +7,34 @@ import (
 	"path/filepath"
 )
 
+// type ViteConfig passes info needed to generate the library's
+// output.
+type ViteConfig struct {
+
+	// FS is the filesystem where assets can be loaded.
+	FS fs.FS
+
+	// Environment (development|production)
+	Environment string
+
+	//AssetsPath (typically dist/assets for prod, src for dev)
+	AssetsPath string
+
+	// URLPrefix (assets/ for prod, src/ for dev)
+	URLPrefix string
+
+	// Entry point: as configured in vite.config.js. Typically
+	// src/main.js or src/main.ts.
+	EntryPoint string
+}
+
 // type VueGlue summarizes a manifest file, and points to the assets.
 type VueGlue struct {
+
+	// Environment. This controls whether the library will
+	// configure the host for hot updating, or whether it
+	// needs to configure loading of a dist/ directory.
+	Environment string
 
 	// Entry point for JS
 	MainModule string
@@ -26,7 +52,7 @@ type VueGlue struct {
 
 	// An embed that points to the Vue/Vite dist
 	// directory.
-	DistFS fs.ReadFileFS
+	DistFS fs.FS
 }
 
 // ParseManifest imports and parses a manifest returning a glue object.
@@ -41,23 +67,29 @@ func ParseManifest(contents []byte) (*VueGlue, error) {
 
 // NewVueGlue finds the manifest in the supplied file system
 // and returns a glue object.
-func NewVueGlue(dist fs.ReadFileFS, pathToDist string) (*VueGlue, error) {
+func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
+	var err error
+	var glue *VueGlue
+	glue = &VueGlue{}
 
-	if !fs.ValidPath(pathToDist) {
-		return nil, ErrManifestDNF
-	}
+	glue.Environment = config.Environment
+	glue.DistFS = config.FS
 
-	// Get the manifest file
-	manifestFile := filepath.Join(pathToDist, "manifest.json")
-	contents, err := dist.ReadFile(manifestFile)
-	if err != nil {
-		return nil, err
+	if config.Environment == "production" {
+		// Get the manifest file
+		manifestFile := filepath.Join(config.AssetsPath, "manifest.json")
+		contents, err := fs.ReadFile(config.FS, manifestFile)
+		if err != nil {
+			return nil, err
+		}
+		glue, err = ParseManifest(contents)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// all we need for hot updating.
+		glue.MainModule = config.EntryPoint
 	}
-	glue, err := ParseManifest(contents)
-	if err != nil {
-		return nil, err
-	}
-	glue.DistFS = dist
 
 	output, _ := json.MarshalIndent(glue, "", "  ")
 	fmt.Println(string(output))

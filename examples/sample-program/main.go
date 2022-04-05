@@ -1,19 +1,57 @@
 package main
 
 import (
-	"embed"
+	"flag"
 	"html/template"
-	"io/fs"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	vueglue "github.com/torenware/vite-go"
 )
 
-//go:embed "dist"
-var dist embed.FS
+var environment string
+var assets string
+var jsEntryPoint string
 
 var vueData *vueglue.VueGlue
+
+func GuardedFileServer(prefix, stripPrefix, serveDir string) http.Handler {
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		prefixLen := len(stripPrefix)
+
+		rest := r.URL.Path[prefixLen:]
+		parts := strings.Split(rest, "/")
+		log.Println(parts)
+		// We want to prevent dot files
+		if parts[len(parts)-1][:1] == "." {
+			//force a relative link.
+			log.Printf("Found dotfile or dir %s", parts[0])
+			http.NotFound(w, r)
+			return
+		}
+		fileServer := http.StripPrefix(stripPrefix, http.FileServer(http.Dir(serveDir)))
+		fileServer.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(handler)
+}
+
+func ServeVueAssets(mux *http.ServeMux, prefix, stripPrefix, serveDir string) error {
+	assetServer := GuardedFileServer(prefix, stripPrefix, serveDir)
+	mux.Handle(prefix, logRequest(assetServer))
+	return nil
+}
+
+func logRequest(next http.Handler) http.Handler {
+	log.Println("invoked log handler")
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
+		next.ServeHTTP(w, r)
+	})
+}
 
 func pageWithAVue(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("./test-template.tmpl")
@@ -23,12 +61,33 @@ func pageWithAVue(w http.ResponseWriter, r *http.Request) {
 
 	t.Execute(w, vueData)
 }
+
 func main() {
+
+	flag.StringVar(&environment, "env", "development", "development|production")
+	flag.StringVar(&assets, "assets", "frontend", "location of javascript files. dist for production.")
+	flag.StringVar(&jsEntryPoint, "entryp", "src/main.js", "relative path of the entry point of the js app.")
 
 	// We pass the file system with the built Vue
 	// program, and the path from the root of that
 	// file system to the "assets" directory.
-	glue, err := vueglue.NewVueGlue(dist, "dist")
+
+	var config vueglue.ViteConfig
+
+	config.Environment = environment
+	config.AssetsPath = assets
+	config.EntryPoint = jsEntryPoint
+	config.FS = os.DirFS(assets)
+
+	if environment == "production" {
+		config.URLPrefix = "/assets/"
+	} else if environment == "development" {
+		config.URLPrefix = "/src/"
+	} else {
+		log.Fatalln("illegal environment setting")
+	}
+
+	glue, err := vueglue.NewVueGlue(&config)
 	if err != nil {
 		log.Fatalln(err)
 		return
@@ -40,12 +99,31 @@ func main() {
 	mux.HandleFunc("/", pageWithAVue)
 
 	// Add a static file server for our Vue related elements
-	sub, err := fs.Sub(dist, "dist/assets")
+	// sub, err := fs.Sub(config.FS, "frontend")
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+	// log.Println("sub", sub)
+
+	// fss, err := .Open(".")
+	// if err != nil {
+	// 	log.Println("could not open httpFS", err)
+	// 	return
+	// }
+	// finfo, err := fss.Readdir(0)
+	// if err != nil {
+	// 	log.Println(err)
+	// } else {
+	// 	for _, entry := range finfo {
+	// 		log.Println(entry.Name())
+	// 	}
+
+	// }
+
+	err = ServeVueAssets(mux, "/src/", "/", "frontend")
 	if err != nil {
-		log.Fatalln(err)
+		log.Println("setting up FS failed:", err)
 	}
-	assetServer := http.FileServer(http.FS(sub))
-	mux.Handle("/assets/", http.StripPrefix("/assets", assetServer))
 
 	log.Println("Starting server on :4000")
 	err = http.ListenAndServe(":4000", mux)

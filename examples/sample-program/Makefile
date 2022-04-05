@@ -24,7 +24,7 @@ go.mod:
 
 go.sum: go.mod
 
-run: go.sum dist/manifest.json dist/assets test-template.tmpl
-	@go run .
+build: go.sum dist/manifest.json dist/assets test-template.tmpl
+	@go build .
 
 
