@@ -2,8 +2,8 @@ package vueglue
 
 import (
 	"embed"
+	"errors"
 	"io/fs"
-	"log"
 )
 
 // type ViteConfig passes info needed to generate the library's
@@ -64,6 +64,34 @@ func ParseManifest(contents []byte) (*VueGlue, error) {
 	return glue, nil
 }
 
+// If we have an embedded FS, modify it to point to the
+// requested assets directory
+func correctEmbedFS(embedded fs.FS, assetsPath string) (fs.FS, error) {
+
+	// embed behaves a little strange: it does
+	// not set the top level dir as the "current"
+	// dir for the FS. This is almost never what you
+	// want, so we correct for this
+	//
+	// @see https://github.com/golang/go/issues/43431
+	//
+	if _, ok := embedded.(embed.FS); ok {
+		// Make sure someone has not already taken a sub:
+		_, err := fs.ReadDir(embedded, assetsPath)
+		if err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return nil, err
+		}
+		if err == nil {
+			// uncorrected FS, so take its subdir
+			embedded, err = fs.Sub(embedded, assetsPath)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return embedded, nil
+}
+
 // NewVueGlue finds the manifest in the supplied file system
 // and returns a glue object.
 func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
@@ -71,21 +99,16 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 	glue = &VueGlue{}
 
 	glue.Environment = config.Environment
-	glue.DistFS = config.FS
+	correctedFS, err := correctEmbedFS(config.FS, config.AssetsPath)
+	if err != nil {
+		return nil, err
+	}
+	glue.DistFS = correctedFS
 
 	if config.Environment == "production" {
-		// embed behaves a little strange: it does
-		// not set the top level dir as the "current"
-		// dir for the FS. So give it a clue.
-		// @see https://github.com/golang/go/issues/43431
-		prefix := ""
-		if _, ok := config.FS.(embed.FS); ok {
-			log.Println("we are using an embed")
-			prefix = config.AssetsPath + "/"
-		}
 		// Get the manifest file
-		manifestFile := prefix + "manifest.json"
-		contents, err := fs.ReadFile(config.FS, manifestFile)
+		manifestFile := "manifest.json"
+		contents, err := fs.ReadFile(glue.DistFS, manifestFile)
 		if err != nil {
 			return nil, err
 		}

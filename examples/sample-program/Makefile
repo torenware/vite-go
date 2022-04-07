@@ -44,7 +44,11 @@ build: clean go.sum dist/manifest.json dist/assets test-template.tmpl
 
 preview: build
 	@echo run test_program
-	@ ./test_program -env production -assets dist
+	@ ./test_program -env production -assets dist&
 
+stop:
+	@echo stop test_program
+	@- pkill -SIGTERM -f "test_program -env production -assets dist"
+	@echo send SIGTERM to test_program
 
 
