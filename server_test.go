@@ -1,14 +1,17 @@
 package vueglue
 
 import (
+	"embed"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
-	// vueglue "github.com/torenware/vite-go"
 )
+
+//go:embed testdata
+var embedTest embed.FS
 
 func InitializeVueGlue(config *ViteConfig) (*VueGlue, error) {
 	glue, err := NewVueGlue(config)
@@ -117,6 +120,49 @@ func TestServerHandler(t *testing.T) {
 
 func TestFileVisibility(t *testing.T) {
 	srv, err := BootStrapServer(nil)
+	if err != nil {
+		t.Fatalf("could not bootstrap test server: %s", err)
+	}
+	defer srv.Close()
+
+	var dataList = []struct {
+		Path   string
+		Status int
+	}{
+		{"", 200},
+		{"index.html", 200},
+		{"regfile.txt", 200},
+		{"not-there", 404},
+		{".secret", 404},
+		{".secdir/file.txt", 404},
+		{"subdir/regfile.txt", 200},
+		{"subdir/.env-file", 404},
+	}
+
+	base := srv.URL
+	for _, item := range dataList {
+		url := fmt.Sprintf("%s/%s", base, item.Path)
+		response, err := http.Head(url)
+		if err != nil {
+			t.Errorf("%s: Error on Head %s", item.Path, err)
+		} else {
+			if response.StatusCode != item.Status {
+				t.Errorf("%s: expected %d but got %d", item.Path, item.Status, response.StatusCode)
+			}
+		}
+	}
+
+}
+
+func TestEmbedAccess(t *testing.T) {
+	config := &ViteConfig{
+		Environment: "development",
+		AssetsPath:  "testdata",
+		URLPrefix:   "/",
+		FS:          embedTest,
+		EntryPoint:  "server.js",
+	}
+	srv, err := BootStrapServer(config)
 	if err != nil {
 		t.Fatalf("could not bootstrap test server: %s", err)
 	}

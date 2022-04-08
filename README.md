@@ -1,14 +1,20 @@
 # Vite Integration For Go
 
-A simple module that lets you serve your Vue 3 project from a Go-based web server.  You build your project, tell Go where to find the `dist/` directory, and the module figures out how to load the generated Vue application into a web page. Right now, the only configuration is the `manifest.json` from your Vue build.
+A simple module that lets you serve your Vue 3 project from a Go-based web server.  You build your project, tell Go where to find the `dist/` directory, and the module figures out how to load the generated Vue application into a web page.
 
 ## Installation
 
-```
-
+```shell
 go get github.com/torenware/vite-go
 
 ```
+
+To upgrade to the current version:
+
+```shell
+go get -u github.com/torenware/vite-go@latest 
+```
+
 
 ## Getting It Into Your Go Project
 
@@ -55,7 +61,7 @@ export default defineConfig({
 The essential piece here is the vue plugin and the `build.manifest` line, since `vite-go` needs the manifest file to be present in order to work correctly.
 
 
-Here's some pseudo sample code that uses the go 1.16+ embedding feature:
+Here's some pseudo sample code that uses the go 1.16+ embedding feature for the production build, and a regular disk directory (`frontend` in our case) as a development directory:
 
 ```golang
 
@@ -83,10 +89,11 @@ func main() {
 		Environment: "production",
 		AssetsPath:  "dist",
 		EntryPoint:  "src/main.js",
-		FS:          os.DirFS(dist),
+		FS:          dist,
 	}
 
-    // OR this:     
+    // OR this:
+    
     // Development configuration
 	config := &vueglue.ViteConfig{
 		Environment: "development",
@@ -120,6 +127,37 @@ func MyHandler(w http.ResponseWriter, r *http.Request) {
 
 ```
 
+You will also need to serve your javascript, css and images used by your javascript code to the web. You can use a solution like [`http.FileServer`](https://pkg.go.dev/net/http#FileServer), or the wrapper the library implements that configures this for you:
+
+```golang
+   // using the standard library's multiplexer:
+	mux := http.NewServeMux()
+
+	// Set up a file server for our assets.
+	fsHandler, err := glue.FileServer()
+	if err != nil {
+		log.Println("could not set up static file server", err)
+		return
+	}
+	mux.Handle("/src/", fsHandler)
+
+```
+
+Some router implementations may alternatively require you to do something more like:
+
+```golang
+// chi router
+mux := chi.NewMux()
+
+...
+
+mux.Handle("/src/*", fsHandler)
+
+```
+
+YMMV :-)
+
+## Templates
 
 Your template gets the needed tags and links something like this:
 
@@ -150,7 +188,7 @@ The sample program in `examples/sample-program` has much more detail, and actual
 
 ## Caveats
 
-This code is a proof of concept, and while it works in my sample application, it may not work for you :-) I've posted the code so people can see it, and kick the tires on it. It's no where near production ready, and, well, it may bite.
+This code is a proof of concept, and while it works in my sample application, it may not work for you :-) I've posted the code so people can see it, and kick the tires on it. I think you'll find it useful.
 
 
 
