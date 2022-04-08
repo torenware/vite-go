@@ -43,10 +43,12 @@ func (vg *VueGlue) guardedFileServer(serveDir fs.FS) http.Handler {
 
 		// Now walk the parts and make sure none of them are
 		// either "hidden" files or directories.
-		for _, stem := range parts {
-			if stem[:1] == "." {
-				http.NotFound(w, r)
-				return
+		if len(parts) > 0 && parts[0] != "" {
+			for _, stem := range parts {
+				if stem[:1] == "." {
+					http.NotFound(w, r)
+					return
+				}
 			}
 		}
 
