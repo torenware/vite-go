@@ -1,12 +1,11 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"html/template"
 	"log"
 	"net/http"
-	"os"
-	"strings"
 
 	vueglue "github.com/torenware/vite-go"
 )
@@ -17,31 +16,8 @@ var jsEntryPoint string
 
 var vueData *vueglue.VueGlue
 
-func GuardedFileServer(prefix, stripPrefix, serveDir string) http.Handler {
-
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		prefixLen := len(stripPrefix)
-		rest := r.URL.Path[prefixLen:]
-		parts := strings.Split(rest, "/")
-		// We want to prevent dot files from getting served.
-		if parts[len(parts)-1][:1] == "." {
-			//force a relative link.
-			log.Printf("Found dotfile or dir %s", parts[0])
-			http.NotFound(w, r)
-			return
-		}
-		fileServer := http.StripPrefix(stripPrefix, http.FileServer(http.Dir(serveDir)))
-		fileServer.ServeHTTP(w, r)
-	}
-
-	return http.HandlerFunc(handler)
-}
-
-func ServeVueAssets(mux *http.ServeMux, prefix, stripPrefix, serveDir string) error {
-	assetServer := GuardedFileServer(prefix, stripPrefix, serveDir)
-	mux.Handle(prefix, logRequest(assetServer))
-	return nil
-}
+//go:embed frontend/*
+var dist embed.FS
 
 func logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +51,8 @@ func main() {
 	config.Environment = environment
 	config.AssetsPath = assets
 	config.EntryPoint = jsEntryPoint
-	config.FS = os.DirFS(assets)
+	//config.FS = os.DirFS(assets)
+	config.FS = dist
 
 	if environment == "production" {
 		config.URLPrefix = "/assets/"
@@ -94,12 +71,15 @@ func main() {
 
 	// Set up our router
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", pageWithAVue)
 
-	err = ServeVueAssets(mux, config.URLPrefix, "/", config.AssetsPath)
+	// Set up a file server for our assets.
+	fsHandler, err := glue.FileServer()
 	if err != nil {
-		log.Println("setting up FS failed:", err)
+		log.Println("could not set up static file server", err)
+		return
 	}
+	mux.Handle("/src/", fsHandler)
+	mux.HandleFunc("/", pageWithAVue)
 
 	log.Println("Starting server on :4000")
 	err = http.ListenAndServe(":4000", mux)

@@ -52,6 +52,14 @@ type VueGlue struct {
 	// directory (production) or the javascript src directory
 	// (development)
 	DistFS fs.FS
+
+	// AssetPath is the path from the root of DistFS. This
+	// allows us to check if the FS is correctly "pointed"
+	// to the diretory containing the assets.
+	AssetPath string
+
+	// Debug mode
+	Debug bool
 }
 
 // ParseManifest imports and parses a manifest returning a glue object.
@@ -98,17 +106,15 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 	var glue *VueGlue
 	glue = &VueGlue{}
 
-	glue.Environment = config.Environment
 	correctedFS, err := correctEmbedFS(config.FS, config.AssetsPath)
 	if err != nil {
 		return nil, err
 	}
-	glue.DistFS = correctedFS
 
 	if config.Environment == "production" {
 		// Get the manifest file
 		manifestFile := "manifest.json"
-		contents, err := fs.ReadFile(glue.DistFS, manifestFile)
+		contents, err := fs.ReadFile(correctedFS, manifestFile)
 		if err != nil {
 			return nil, err
 		}
@@ -116,10 +122,15 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 		if err != nil {
 			return nil, err
 		}
+
 	} else {
 		// all we need for hot updating.
 		glue.MainModule = config.EntryPoint
 	}
+
+	glue.Environment = config.Environment
+	glue.AssetPath = config.AssetsPath
+	glue.DistFS = correctedFS
 
 	return glue, nil
 }
