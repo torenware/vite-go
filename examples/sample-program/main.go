@@ -16,7 +16,7 @@ var jsEntryPoint string
 
 var vueData *vueglue.VueGlue
 
-//go:embed frontend/*
+//go:embed frontend
 var dist embed.FS
 
 func logRequest(next http.Handler) http.Handler {
