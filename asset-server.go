@@ -4,8 +4,44 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 )
+
+// Wrapper file system to prevent listing of directories
+// @see https://www.alexedwards.net/blog/disable-http-fileserver-directory-listings
+
+type wrapperFS struct {
+	FS fs.FS
+}
+
+// Open implements the fs.FS interface for wrapperFS
+func (wrpr wrapperFS) Open(path string) (fs.File, error) {
+	f, err := wrpr.FS.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	if s.IsDir() {
+		// Have an index file or go home!
+		index := filepath.Join(path, "index.html")
+		if _, err := wrpr.FS.Open(index); err != nil {
+			closeErr := f.Close()
+			if closeErr != nil {
+				return nil, closeErr
+			}
+
+			return nil, err
+		}
+	}
+
+	return f, nil
+}
 
 // FileServer is a customized version of http.FileServer
 // that can handle either an embed.FS or a os.DirFS fs.FS.
@@ -21,7 +57,12 @@ func (vg *VueGlue) FileServer() (http.Handler, error) {
 		return nil, err
 	}
 
-	handler := vg.guardedFileServer(target)
+	// Prevent directory listings
+	wrapped := wrapperFS{
+		FS: target,
+	}
+
+	handler := vg.guardedFileServer(wrapped)
 
 	return handler, nil
 }
@@ -43,12 +84,10 @@ func (vg *VueGlue) guardedFileServer(serveDir fs.FS) http.Handler {
 
 		// Now walk the parts and make sure none of them are
 		// either "hidden" files or directories.
-		if len(parts) > 0 && parts[0] != "" {
-			for _, stem := range parts {
-				if stem[:1] == "." {
-					http.NotFound(w, r)
-					return
-				}
+		for _, stem := range parts {
+			if len(stem) > 0 && stem[:1] == "." {
+				http.NotFound(w, r)
+				return
 			}
 		}
 

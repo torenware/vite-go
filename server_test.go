@@ -135,6 +135,8 @@ func TestFileVisibility(t *testing.T) {
 		{"not-there", 404},
 		{".secret", 404},
 		{".secdir/file.txt", 404},
+		{"subdir", 404},
+		{"subdir/", 404},
 		{"subdir/regfile.txt", 200},
 		{"subdir/.env-file", 404},
 	}
@@ -178,6 +180,8 @@ func TestEmbedAccess(t *testing.T) {
 		{"not-there", 404},
 		{".secret", 404},
 		{".secdir/file.txt", 404},
+		{"subdir", 404},
+		{"subdir/", 404},
 		{"subdir/regfile.txt", 200},
 		{"subdir/.env-file", 404},
 	}
