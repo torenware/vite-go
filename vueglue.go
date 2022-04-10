@@ -26,6 +26,10 @@ type ViteConfig struct {
 	// URLPrefix (/assets/ for prod, /src/ for dev)
 	URLPrefix string
 
+	// DevServer is the URL to use for the Vite dev server.
+	// Default is "http://localhost:3000".
+	DevServer string
+
 	// Entry point: as configured in vite.config.js. Typically
 	// src/main.js or src/main.ts.
 	EntryPoint string
@@ -52,6 +56,9 @@ type VueGlue struct {
 	// directory (production) or the javascript src directory
 	// (development)
 	DistFS fs.FS
+
+	// DevServer is the URI of the Vite development server
+	DevServer string
 
 	// AssetPath is the path from the root of DistFS. This
 	// allows us to check if the FS is correctly "pointed"
@@ -124,8 +131,12 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 		}
 
 	} else {
-		// all we need for hot updating.
 		glue.MainModule = config.EntryPoint
+		if config.DevServer == "" {
+			glue.DevServer = "http://localhost:3000"
+		} else {
+			glue.DevServer = config.DevServer
+		}
 	}
 
 	glue.Environment = config.Environment

@@ -1,0 +1,19 @@
+{
+  "src/main.ts": {
+    "file": "assets/main.9e2e52ce.js",
+    "src": "src/main.ts",
+    "isEntry": true,
+    "imports": [
+      "_vendor.b43f27d7.js"
+    ],
+    "css": [
+      "assets/main.0f2a382e.css"
+    ],
+    "assets": [
+      "assets/logo.03d6d6da.png"
+    ]
+  },
+  "_vendor.b43f27d7.js": {
+    "file": "assets/vendor.b43f27d7.js"
+  }
+}

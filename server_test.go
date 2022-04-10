@@ -2,61 +2,14 @@ package vueglue
 
 import (
 	"embed"
-	"errors"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 )
 
 //go:embed testdata
 var embedTest embed.FS
-
-func InitializeVueGlue(config *ViteConfig) (*VueGlue, error) {
-	glue, err := NewVueGlue(config)
-	return glue, err
-}
-
-func StartTestServer(glue *VueGlue) (*httptest.Server, error) {
-	handler, err := glue.FileServer()
-	if err != nil {
-		return nil, err
-	}
-
-	mux := http.NewServeMux()
-	mux.Handle("/", handler)
-
-	server := httptest.NewServer(mux)
-	if server == nil {
-		return nil, errors.New("did not get server instance")
-	}
-
-	return server, nil
-}
-
-func BootStrapServer(config *ViteConfig) (*httptest.Server, error) {
-	if config == nil {
-		config = &ViteConfig{
-			Environment: "development",
-			AssetsPath:  "tests/testdata",
-			URLPrefix:   "/",
-			FS:          os.DirFS("testdata"),
-			EntryPoint:  "server.js",
-		}
-	}
-
-	glue, err := InitializeVueGlue(config)
-	if err != nil {
-		return nil, err
-	}
-
-	server, err := StartTestServer(glue)
-	if err != nil {
-		return nil, err
-	}
-	return server, nil
-}
 
 func TestInitLib(t *testing.T) {
 	config := &ViteConfig{
@@ -67,7 +20,7 @@ func TestInitLib(t *testing.T) {
 		EntryPoint:  "server.js",
 	}
 
-	glue, err := InitializeVueGlue(config)
+	glue, err := initializeVueGlue(config)
 	if err != nil {
 		t.Fatalf("Library failed to initialize: %s", err)
 	}
@@ -90,7 +43,7 @@ func TestServerHandler(t *testing.T) {
 		FS:          os.DirFS("testdata"),
 		EntryPoint:  "server.js",
 	}
-	glue, err := InitializeVueGlue(config)
+	glue, err := initializeVueGlue(config)
 	if err != nil {
 		t.Fatalf("no glue! %s", err)
 	}
@@ -99,7 +52,7 @@ func TestServerHandler(t *testing.T) {
 		t.Fatalf("no handler was returned: %s", err)
 	}
 
-	srv, err := StartTestServer(glue)
+	srv, err := startTestServer(glue)
 	if err != nil {
 		t.Fatalf("server did not bootstrap: %s", err)
 	}
@@ -119,7 +72,7 @@ func TestServerHandler(t *testing.T) {
 }
 
 func TestFileVisibility(t *testing.T) {
-	srv, err := BootStrapServer(nil)
+	srv, err := bootStrapServer(nil)
 	if err != nil {
 		t.Fatalf("could not bootstrap test server: %s", err)
 	}
@@ -164,7 +117,7 @@ func TestEmbedAccess(t *testing.T) {
 		FS:          embedTest,
 		EntryPoint:  "server.js",
 	}
-	srv, err := BootStrapServer(config)
+	srv, err := bootStrapServer(config)
 	if err != nil {
 		t.Fatalf("could not bootstrap test server: %s", err)
 	}

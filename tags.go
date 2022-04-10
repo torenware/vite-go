@@ -12,7 +12,7 @@ func (vg *VueGlue) RenderTags() (template.HTML, error) {
 
 	if vg.Environment == "development" {
 		tags = `
-    <script type="module" src="http://localhost:3000/{{ .MainModule }}"></script>
+    <script type="module" src="{{.DevServer}}/{{ .MainModule }}"></script>
         `
 	} else {
 		tags = `
