@@ -1,6 +1,6 @@
 # Vite Integration For Go
 
-A simple module that lets you serve your Vue 3 project from a Go-based web server.  You build your project, tell Go where to find the `dist/` directory, and the module figures out how to load the generated Vue application into a web page.
+A Go module that lets you serve your Vue 3, React, or Svelte project from a Go-based web server.  You build your project, tell Go where to find the `dist/` directory, and the module figures out how to load the generated Vue application into a web page.
 
 ## Installation
 
@@ -18,7 +18,21 @@ go get -u github.com/torenware/vite-go@latest
 
 ## Getting It Into Your Go Project
 
-You need to expose the `dist/` directory so Go can find your generated assets for the Vue project, and the `manifest.json` file that describes it. You may need to change your `vite.config.ts` file to make sure the manifest file is generated, and to put the `dist` directory where Go needs it to be. Here's what I'm using:
+The first requirement is to [use ViteJS's tooling](https://vitejs.dev/guide/#scaffolding-your-first-vite-project) for your JavaScript code. The easiest thing to do is either to start out this way, or to create a new project and move your files into the directory that Vite creates. Using NPM:
+
+```shell
+npm create vite@latest
+```
+
+Using Yarn:
+
+```shell
+yarn create vite
+```
+
+Just answer the questions asked, and away you go.
+
+You will need to position your source files and the generated `dist/` directory so Go can find your  project, the `manifest.json` file that describes it, and the assets that Vite generates for you. You may need to change your `vite.config.js` file (`vite.config.ts` if you prefer using Typescript) to make sure the manifest file is generated as well. Here's what I'm using:
 
 ```typescript
 /**
@@ -30,7 +44,7 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig({
   plugins: [vue()],
   build: {
-    outDir: 'cmd/web/dist',
+    outDir: '../cmd/web/dist',
     sourcemap: true,
     manifest: true,
     rollupOptions: {
@@ -42,7 +56,7 @@ export default defineConfig({
 });
 ```  
 
-This, however, more than you need. A minimal config file would be:
+This, however, is more than you need. A minimal config file would be:
 
 ```javascript
 import { defineConfig } from 'vite'
@@ -159,7 +173,7 @@ YMMV :-)
 
 ## Templates
 
-Your template gets the needed tags and links something like this:
+Your template gets the needed tags and links by declaring the glue object in your template and calling RenderTags on, as so:
 
 
 ```HTML
@@ -184,12 +198,13 @@ Your template gets the needed tags and links something like this:
  
 ```
 
+You should check that the glue (`$vue` in our example) is actually defined as I do here, since it will be nil unless you inject it into your template.
+
 The sample program in `examples/sample-program` has much more detail, and actually runs.
 
 ## Caveats
 
-This code is a proof of concept, and while it works in my sample application, it may not work for you :-) I've posted the code so people can see it, and kick the tires on it. I think you'll find it useful.
-
+This code is a proof of concept, and is relatively new; in particular, there may be some configurations you can use in `vite.config.js` that won't work as I expect. If so: [please open an issue on Github](https://github.com/torenware/vite-go/issues).  I've posted the code so people can see it, and try things out. I think you'll find it useful.
 
 
 Copyright © 2022 Rob Thorne
