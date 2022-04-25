@@ -15,6 +15,10 @@ dist
 dist-ssr
 *.local
 
+# we build a copy of the react preamble, so
+# package-lock.json is not in the repo.
+package-lock.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

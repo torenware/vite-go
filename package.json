@@ -1,0 +1,15 @@
+{
+  "name": "vueglue",
+  "version": "1.0.0",
+  "description": "react stubs for vueglue",
+  "author": "Rob Thorne",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/torenware/vite-go/issues"
+  },
+  "homepage": "https://github.com/torenware/vite-go#readme",
+  "dependencies": {
+    "react-refresh": "^0.12.0"
+  }
+}
+

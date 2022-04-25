@@ -103,6 +103,7 @@ func main() {
 		Environment: "production",
 		AssetsPath:  "dist",
 		EntryPoint:  "src/main.js",
+		Platform:    "vue",
 		FS:          dist,
 	}
 
@@ -113,6 +114,7 @@ func main() {
 		Environment: "development",
 		AssetsPath:  "frontend",
 		EntryPoint:  "src/main.js",
+		Platform:    "vue",
 		FS:          os.DirFS("frontend"),
 	}
 

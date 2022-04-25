@@ -30,6 +30,10 @@ type ViteConfig struct {
 	// Default is "http://localhost:3000".
 	DevServer string
 
+	// Platform (vue|react|svelte) is the target platform.
+	// Default is "vue"
+	Platform string
+
 	// Entry point: as configured in vite.config.js. Typically
 	// src/main.js or src/main.ts.
 	EntryPoint string
@@ -51,6 +55,9 @@ type VueGlue struct {
 
 	// Bundled CSS
 	CSSModule []string
+
+	// Target JS Platform
+	Platform string
 
 	// A file system or embed that points to the Vue/Vite dist
 	// directory (production) or the javascript src directory
@@ -141,6 +148,7 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 
 	glue.Environment = config.Environment
 	glue.AssetPath = config.AssetsPath
+	glue.Platform = config.Platform
 	glue.DistFS = correctedFS
 
 	return glue, nil

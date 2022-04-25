@@ -13,6 +13,7 @@ import (
 var environment string
 var assets string
 var jsEntryPoint string
+var platform = "vue"
 
 var vueData *vueglue.VueGlue
 
@@ -40,6 +41,7 @@ func main() {
 	flag.StringVar(&environment, "env", "development", "development|production")
 	flag.StringVar(&assets, "assets", "frontend", "location of javascript files. dist for production.")
 	flag.StringVar(&jsEntryPoint, "entryp", "src/main.js", "relative path of the entry point of the js app.")
+	flag.StringVar(&platform, "platform", "vue", "target platform for JavaScript (vue|react|svelte")
 	flag.Parse()
 
 	// We pass the file system with the built Vue
@@ -51,6 +53,7 @@ func main() {
 	config.Environment = environment
 	config.AssetsPath = assets
 	config.EntryPoint = jsEntryPoint
+	config.Platform = platform
 	//config.FS = os.DirFS(assets)
 	config.FS = dist
 
@@ -79,7 +82,7 @@ func main() {
 		return
 	}
 	mux.Handle("/src/", fsHandler)
-	mux.HandleFunc("/", pageWithAVue)
+	mux.Handle("/", logRequest(http.HandlerFunc(pageWithAVue)))
 
 	log.Println("Starting server on :4000")
 	err = http.ListenAndServe(":4000", mux)

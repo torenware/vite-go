@@ -1,12 +1,16 @@
 package vueglue
 
 import (
+	"embed"
 	"io/fs"
 	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
 )
+
+//go:embed react
+var embedFiles embed.FS
 
 // FileServer is a customized version of http.FileServer
 // that can handle either an embed.FS or a os.DirFS fs.FS.
@@ -56,6 +60,22 @@ func (vg *VueGlue) guardedFileServer(serveDir fs.FS) http.Handler {
 			}
 		}
 
+		// handle any special-cased files
+		if len(parts) > 0 {
+			baseFile := parts[len(parts)-1]
+			if baseFile == "preamble.js" {
+				// react preamble file
+				bytes, err := embedFiles.ReadFile("react/preamble.js")
+				if err != nil {
+					log.Println("could not load preamble:", err)
+					http.NotFound(w, r)
+					return
+				}
+				serveOneFile(w, r, bytes, "application/javascript")
+				return
+			}
+		}
+
 		if vg.Debug {
 			log.Println("entered FS", r.URL.Path)
 			dir, err := fs.ReadDir(serveDir, ".")
@@ -70,8 +90,8 @@ func (vg *VueGlue) guardedFileServer(serveDir fs.FS) http.Handler {
 			}
 
 		}
-
-		fileServer := http.StripPrefix(stripPrefix, http.FileServer(http.FS(serveDir)))
+		loggingFS := logRequest(http.FileServer(http.FS(serveDir)))
+		fileServer := http.StripPrefix(stripPrefix, loggingFS)
 		fileServer.ServeHTTP(w, r)
 	}
 
@@ -111,4 +131,22 @@ func (wrpr wrapperFS) Open(path string) (fs.File, error) {
 	}
 
 	return f, nil
+}
+
+// serveOneFile is used for serving special-cased files.
+func serveOneFile(w http.ResponseWriter, r *http.Request, data []byte, ctype string) {
+	w.Header().Add("Content-Type", ctype)
+	_, err := w.Write(data)
+	if err != nil {
+		log.Println("could not write file:", err)
+	}
+}
+
+func logRequest(next http.Handler) http.Handler {
+	log.Println("invoked log handler")
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
+
+		next.ServeHTTP(w, r)
+	})
 }

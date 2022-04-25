@@ -11,11 +11,18 @@ func (vg *VueGlue) RenderTags() (template.HTML, error) {
 	var tags string
 
 	if vg.Environment == "development" {
-		tags = `
+		if vg.Platform == "react" {
+			// react requires some extra help to load
+			tags += `
+    <script src="/src/preamble.js"></script>
+            `
+		}
+		tags += `
     <script type="module" src="{{.DevServer}}/{{ .MainModule }}"></script>
         `
+
 	} else {
-		tags = `
+		tags += `
 	<script type="module" crossorigin src="/{{ .MainModule }}"></script>
 	{{ range .Imports }}
 	<link rel="modulepreload" href="/{{.}}">
