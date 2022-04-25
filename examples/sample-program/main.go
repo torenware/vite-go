@@ -41,7 +41,7 @@ func main() {
 	flag.StringVar(&environment, "env", "development", "development|production")
 	flag.StringVar(&assets, "assets", "frontend", "location of javascript files. dist for production.")
 	flag.StringVar(&jsEntryPoint, "entryp", "src/main.js", "relative path of the entry point of the js app.")
-	flag.StringVar(&platform, "platform", "vue", "target platform for JavaScript (vue|react|svelte")
+	flag.StringVar(&platform, "platform", "vue", "vue|react|svelte")
 	flag.Parse()
 
 	// We pass the file system with the built Vue

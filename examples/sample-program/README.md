@@ -49,6 +49,8 @@ Usage of ./test_program:
     	relative path of the entry point of the js app. (default "src/main.js")
   -env string
     	development|production (default "development")
+  -platform string
+    	vue|react|svelte (default "vue")
 ```
 
 You'll need to have the make utility and npm installed for the demo 
