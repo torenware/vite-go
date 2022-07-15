@@ -39,6 +39,10 @@ dev:  stop_dev go.sum $(JS_DIR)
 	@ VITE_PID=$(VITE_PID) ./start-vite.sh $(JS_DIR)
 	@ go run . -pid $(GO_PID) &
 
+dev_go: stop_dev go.sum
+	@echo starting go server only...
+	@ go run . -pid $(GO_PID) &
+
 
 build: clean go.sum dist/manifest.json dist/assets test-template.tmpl
 	@echo building go binary...

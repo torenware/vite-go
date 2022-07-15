@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -53,7 +54,35 @@ func logRequest(next http.Handler) http.Handler {
 	})
 }
 
+func serveOneFile(uri string, w http.ResponseWriter, r *http.Request) {
+	// serving this out of our embed
+	path := "frontend"
+	contentType := "image/svg+xml"
+	if uri == "/vite.svg" {
+		path += "/public/vite.svg"
+		buf, err := fs.ReadFile(dist, path)
+		if err == nil {
+			// not an error; letting the error case fall through
+			w.Header().Add("Content-Type", contentType)
+			w.Write(buf)
+			return
+		}
+	}
+
+	// Otherwise, we cannot handle it, so 404 it is.
+	w.WriteHeader(http.StatusNotFound)
+}
+
 func pageWithAVue(w http.ResponseWriter, r *http.Request) {
+	// since we are using vite test pages, they assume
+	// that the vite logo is at /vite.svg.  Let's handle
+	// that case here.
+	if r.RequestURI == "/vite.svg" {
+		log.Printf("vite logo requested")
+		serveOneFile(r.RequestURI, w, r)
+		return
+	}
+
 	t, err := template.ParseFiles("./test-template.tmpl")
 	if err != nil {
 		log.Fatal(err)
@@ -96,7 +125,11 @@ func main() {
 	config.Environment = environment
 	config.AssetsPath = assets
 	config.EntryPoint = jsEntryPoint
-	config.Platform = platform
+
+	// Values for a react app:
+	//config.EntryPoint = "src/main.jsx"
+	//config.Platform = "react"
+
 	//config.FS = os.DirFS(assets)
 	config.FS = dist
 

@@ -11,6 +11,7 @@ go.sum
 
 # built by script
 frontend
+frontend-*
 
 __debug_bin
 vitemodtest

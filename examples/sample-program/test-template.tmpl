@@ -30,8 +30,16 @@
             this module, from up on Github
           </a>.
           </p>
-
+        {{ if $vue }}
+          {{ $id := "app" }}
+          {{ if eq $vue.Platform "react" }}
+            {{ $id = "root" }}
+          {{ end }}
+          <div id="{{ $id }}"></div>
+        {{ else }}
           <div id="app"></div>
+        {{ end }}
+
         </main>
         </div>
     </body>
