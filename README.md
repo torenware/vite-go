@@ -213,6 +213,7 @@ As mentioned above, a ViteConfig object must be passed to the `NewVueGlue()` rou
 | **Environment** | What mode you want vite to run in. | development |
 | **FS** | A fs.Embed or fs.DirFS | none; required. |
 | **AssetPath** | *Development:* location of your Javascript files<br>*Production:* location of your built Javascript project | *Development:* frontend<br>*Production:* dist|
+| **Platform** | Any platform supported by Vite. vue and react are known to work; other platforms *may* work if you adjust the other configurations correctly. | vue |
 | **EntryPoint** | Entry point script for your Javascript | src/main.js |
 | **ViteVersion** | Vite major version ("2" or "3") | Best guess based on your package.json file in your project. If you want to make sure, specify the version you want. |
 | **DevServerPort** | Port the dev server will listen on; typically 3000 in version 2, 5173 in version 3 | Best guess based on version | 
