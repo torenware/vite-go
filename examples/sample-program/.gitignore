@@ -13,6 +13,5 @@ go.sum
 frontend
 
 __debug_bin
-.vscode
 vitemodtest
 test_program

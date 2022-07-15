@@ -202,11 +202,27 @@ Your template gets the needed tags and links by declaring the glue object in you
 
 You should check that the glue (`$vue` in our example) is actually defined as I do here, since it will be nil unless you inject it into your template.
 
-The sample program in `examples/sample-program` has much more detail, and actually runs.
+The sample program in [`examples/sample-program`](./examples/sample-program) has much more detail, and actually runs.
+
+## Configuration
+
+As mentioned above, a ViteConfig object must be passed to the `NewVueGlue()` routine. Here are the major fields and how to use them:
+
+| Field | Purpose | Default Setting |
+|---    |---      |---              |
+| **Environment** | What mode you want vite to run in. | development |
+| **FS** | A fs.Embed or fs.DirFS | none; required. |
+| **AssetPath** | *Development:* location of your Javascript files<br>*Production:* location of your built Javascript project | *Development:* frontend<br>*Production:* dist|
+| **EntryPoint** | Entry point script for your Javascript | src/main.js |
+| **ViteVersion** | Vite major version ("2" or "3") | Best guess based on your package.json file in your project. If you want to make sure, specify the version you want. |
+| **DevServerPort** | Port the dev server will listen on; typically 3000 in version 2, 5173 in version 3 | Best guess based on version | 
+| **DevServerDomain** | Domain serving assets. | localhost |
+| **HTTPS** | Whether the dev server serves HTTPS | false | 
 
 ## Caveats
 
 This code is a proof of concept, and is relatively new; in particular, there may be some configurations you can use in `vite.config.js` that won't work as I expect. If so: [please open an issue on Github](https://github.com/torenware/vite-go/issues).  I've posted the code so people can see it, and try things out. I think you'll find it useful.
+
 
 
 Copyright © 2022 Rob Thorne

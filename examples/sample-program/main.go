@@ -3,9 +3,15 @@ package main
 import (
 	"embed"
 	"flag"
+	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
 
 	vueglue "github.com/torenware/vite-go"
 )
@@ -14,6 +20,26 @@ var environment string
 var assets string
 var jsEntryPoint string
 var platform = "vue"
+
+// this is not for vite, but to help our
+// makefile stop the process:
+var pidFile string
+var pidDeleteChan chan os.Signal
+
+func waitForSignal() {
+	if pidFile == "" {
+		return
+	}
+	pidDeleteChan = make(chan os.Signal, 1)
+	signal.Notify(pidDeleteChan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-pidDeleteChan
+		fmt.Println("Deleted pid file")
+		_ = os.Remove(pidFile)
+		os.Exit(0)
+
+	}()
+}
 
 var vueData *vueglue.VueGlue
 
@@ -42,7 +68,24 @@ func main() {
 	flag.StringVar(&assets, "assets", "frontend", "location of javascript files. dist for production.")
 	flag.StringVar(&jsEntryPoint, "entryp", "src/main.js", "relative path of the entry point of the js app.")
 	flag.StringVar(&platform, "platform", "vue", "vue|react|svelte")
+	flag.StringVar(&pidFile, "pid", "", "location of optional pid file.")
 	flag.Parse()
+
+	// save away our pid if we need to use a makefile to stop
+	// this process
+	if pidFile != "" {
+		pid := strconv.Itoa(os.Getpid())
+		_ = ioutil.WriteFile(pidFile, []byte(pid), 0644)
+		waitForSignal()
+	}
+	defer func() {
+		if pidFile != "" {
+			err := os.Remove(pidFile)
+			if err != nil {
+				log.Printf("could not delete pid file: %v", err)
+			}
+		}
+	}()
 
 	// We pass the file system with the built Vue
 	// program, and the path from the root of that

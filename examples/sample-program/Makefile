@@ -1,8 +1,10 @@
 JS_DIR=frontend
 INSTALL_ONCE=$(JS_DIR)
 CONFIG_FILE := vite.config.ts
-VITE_PORT=3000
+# VITE_PORT=3000
 GO_APP_PORT=4000
+VITE_PID=/tmp/vite-script.pid
+GO_PID=/tmp/vite-go.pid
 
 clean:
 	@echo Cleaning up...
@@ -32,11 +34,11 @@ go.mod:
 
 go.sum: go.mod
 
-dev: go.sum $(JS_DIR)
+dev:  stop_dev go.sum $(JS_DIR)
 	@echo starting dev server
-	@-pkill -SIGTERM -f "npm run dev"
-	@cd $(JS_DIR); npm run dev &
-	@go run .
+	@ VITE_PID=$(VITE_PID) ./start-vite.sh $(JS_DIR)
+	@ go run . -pid $(GO_PID) &
+
 
 build: clean go.sum dist/manifest.json dist/assets test-template.tmpl
 	@echo building go binary...
@@ -44,11 +46,18 @@ build: clean go.sum dist/manifest.json dist/assets test-template.tmpl
 
 preview: build
 	@echo run test_program
-	@ ./test_program -env production -assets dist&
+	@ ./test_program -env production -assets dist
 
-stop:
-	@echo stop test_program
-	@- pkill -SIGTERM -f "test_program -env production -assets dist"
-	@echo send SIGTERM to test_program
-
-
+stop_dev:
+ifneq (,$(wildcard $(VITE_PID)))
+	@ echo Stopping vitemodtest
+	@! ps -p $$(cat $(VITE_PID)) &>/dev/null || kill $$(cat $(VITE_PID) 2>/dev/null) &> /dev/null
+else
+	@echo Vite already stopped
+endif
+ifneq (,$(wildcard $(GO_PID)))
+	@echo Stopping go run
+	@! ps -p $$(cat $(GO_PID)) &>/dev/null || kill $$(cat $(GO_PID) 2>/dev/null) > /dev/null
+else
+	@echo Go already stopped
+endif

@@ -6,6 +6,13 @@ import (
 	"io/fs"
 )
 
+// constants
+const (
+	DEFAULT_VITE_VERSION = "3"
+	DEFAULT_PORT_V2      = "3000"
+	DEFAULT_PORT_V3      = "5173"
+)
+
 // type ViteConfig passes info needed to generate the library's
 // output.
 type ViteConfig struct {
@@ -23,12 +30,28 @@ type ViteConfig struct {
 	// directory for dev)
 	AssetsPath string
 
+	// "2" or "3". If not set, we try to guess by looking
+	// at package.json
+	ViteVersion string
+
+	// DevServerDomain is what domain the dev server appears on.
+	// Default is localhost.
+	DevServerDomain string
+
+	// DevServerPort is what port the dev server will appear on.
+	// Default depends upon the ViteVersion.
+	DevServerPort string
+
+	// HTTPS is whether the dev server is encrypted or not.
+	// Default is false.
+	HTTPS bool
+
 	// URLPrefix (/assets/ for prod, /src/ for dev)
 	URLPrefix string
 
 	// DevServer is the URL to use for the Vite dev server.
 	// Default is "http://localhost:3000".
-	DevServer string
+	// DevServer string
 
 	// Platform (vue|react|svelte) is the target platform.
 	// Default is "vue"
@@ -49,6 +72,10 @@ type VueGlue struct {
 
 	// Entry point for JS
 	MainModule string
+
+	// BaseURL is the base URL for the dev server.
+	// Default is http://localhost:5173
+	BaseURL string
 
 	// JS Dependencies / Vendor libs
 	Imports []string
@@ -138,12 +165,14 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 		}
 
 	} else {
+		config.setDevelopmentDefaults()
+		glue.BaseURL = config.buildDevServerBaseURL()
 		glue.MainModule = config.EntryPoint
-		if config.DevServer == "" {
-			glue.DevServer = "http://localhost:3000"
-		} else {
-			glue.DevServer = config.DevServer
-		}
+		// if config.DevServer == "" {
+		// 	glue.DevServer = "http://localhost:3000"
+		// } else {
+		// 	glue.DevServer = config.DevServer
+		// }
 	}
 
 	glue.Environment = config.Environment

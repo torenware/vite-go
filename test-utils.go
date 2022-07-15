@@ -15,6 +15,7 @@ func initializeVueGlue(config *ViteConfig) (*VueGlue, error) {
 			URLPrefix:   "/",
 			FS:          os.DirFS("testdata"),
 			EntryPoint:  "main.js",
+			ViteVersion: "2",
 		}
 	}
 	glue, err := NewVueGlue(config)
