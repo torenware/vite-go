@@ -17,11 +17,6 @@ import (
 	vueglue "github.com/torenware/vite-go"
 )
 
-var environment string
-var assets string
-var jsEntryPoint string
-var platform = "vue"
-
 // this is not for vite, but to help our
 // makefile stop the process:
 var pidFile string
@@ -92,11 +87,12 @@ func pageWithAVue(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	var config vueglue.ViteConfig
 
-	flag.StringVar(&environment, "env", "development", "development|production")
-	flag.StringVar(&assets, "assets", "frontend", "location of javascript files. dist for production.")
-	flag.StringVar(&jsEntryPoint, "entryp", "src/main.js", "relative path of the entry point of the js app.")
-	flag.StringVar(&platform, "platform", "vue", "vue|react|svelte")
+	flag.StringVar(&config.Environment, "env", "development", "development|production")
+	flag.StringVar(&config.AssetsPath, "assets", "", "location of javascript files. dist for production.")
+	flag.StringVar(&config.EntryPoint, "entryp", "", "relative path of the entry point of the js app.")
+	flag.StringVar(&config.Platform, "platform", "", "vue|react|svelte")
 	flag.StringVar(&pidFile, "pid", "", "location of optional pid file.")
 	flag.Parse()
 
@@ -118,27 +114,20 @@ func main() {
 
 	// We pass the file system with the built Vue
 	// program, and the path from the root of that
-	// file system to the "assets" directory.
-
-	var config vueglue.ViteConfig
-
-	config.Environment = environment
-	config.AssetsPath = assets
-	config.EntryPoint = jsEntryPoint
-
-	// Values for a react app:
-	//config.EntryPoint = "src/main.jsx"
-	//config.Platform = "react"
+	// file system to the "assets" directory.t
 
 	//config.FS = os.DirFS(assets)
 	config.FS = dist
 
-	if environment == "production" {
+	if config.Environment == "production" {
+		if config.AssetsPath == "" {
+			config.AssetsPath = "dist"
+		}
 		config.URLPrefix = "/assets/"
-	} else if environment == "development" {
-		config.URLPrefix = "/src/"
+	} else if config.Environment == "development" {
+		log.Printf("pulling defaults using package.json")
 	} else {
-		log.Fatalln("illegal environment setting")
+		log.Fatalln("unsupported environment setting")
 	}
 
 	glue, err := vueglue.NewVueGlue(&config)

@@ -168,7 +168,7 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 		}
 
 	} else {
-		config.setDevelopmentDefaults()
+		config.SetDevelopmentDefaults()
 		glue.BaseURL = config.buildDevServerBaseURL()
 		glue.MainModule = config.EntryPoint
 	}

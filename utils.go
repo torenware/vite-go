@@ -1,6 +1,7 @@
 package vueglue
 
 import (
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,7 +14,7 @@ type PackageJSON struct {
 	Version         string            `json:"version"`
 	Type            string            `json:"type"`
 	Scripts         map[string]string `json:"scripts"`
-	Dependencies    map[string]string `json:"dependencis"`
+	Dependencies    map[string]string `json:"dependencies"`
 	DevDependencies map[string]string `json:"devDependencies"`
 }
 
@@ -35,7 +36,11 @@ type JSAppParams struct {
 
 func (vg *ViteConfig) parsePackageJSON() (*PackageJSON, error) {
 	// If not set, try and find package.json
-	buf, err := fs.ReadFile(vg.FS, "package.json")
+	path := ""
+	if _, ok := vg.FS.(embed.FS); ok {
+		path = vg.AssetsPath + "/"
+	}
+	buf, err := fs.ReadFile(vg.FS, path+"package.json")
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +104,8 @@ func analyzePackageJSON(pkgJSON *PackageJSON) *JSAppParams {
 	var vers string
 	for _, pkg := range supported {
 		if pkg == "svelte" {
+			// special cased because svelte does not put
+			// any configuration into dependencies.
 			if sVer, ok := pkgJSON.DevDependencies["svelte"]; ok {
 				vers = sVer
 				major, full := getSemVer(vers)
@@ -112,44 +119,44 @@ func analyzePackageJSON(pkgJSON *PackageJSON) *JSAppParams {
 				}
 				output.EntryPoint = entryPt
 				break
-			} else {
-				if vers, ok = pkgJSON.Dependencies[pkg]; ok {
-					output.PackageType = pkg
-					major, full := getSemVer(vers)
-					output.MajorVer = major
+			}
+		} else {
+			if vers, ok = pkgJSON.Dependencies[pkg]; ok {
+				output.PackageType = pkg
+				major, full := getSemVer(vers)
+				output.MajorVer = major
 
-					// handle by category
-					entryPt := "src/main.js" // most common case
-					switch pkg {
-					case "vue":
-						output.VueVersion = full
-						if output.HasTypeScript {
-							entryPt = "src/main.ts"
-						}
-					case "react":
-						output.ReactVersion = full
-						if output.HasTypeScript {
-							entryPt = "src/main.tsx"
-						} else {
-							entryPt = "src/main.jsx"
-						}
-					case "preact":
-						output.PreactVersion = full
-						if output.HasTypeScript {
-							entryPt = "src/main.tsx"
-						} else {
-							entryPt = "src/main.jsx"
-						}
-					case "lit":
-						output.LitVersion = full
-						// we do not set entryPt;
-						// lit is just too weird.
-						entryPt = ""
+				// handle by category
+				entryPt := "src/main.js" // most common case
+				switch pkg {
+				case "vue":
+					output.VueVersion = full
+					if output.HasTypeScript {
+						entryPt = "src/main.ts"
 					}
-					// We know as much as we can...
-					output.EntryPoint = entryPt
-					break
+				case "react":
+					output.ReactVersion = full
+					if output.HasTypeScript {
+						entryPt = "src/main.tsx"
+					} else {
+						entryPt = "src/main.jsx"
+					}
+				case "preact":
+					output.PreactVersion = full
+					if output.HasTypeScript {
+						entryPt = "src/main.tsx"
+					} else {
+						entryPt = "src/main.jsx"
+					}
+				case "lit":
+					output.LitVersion = full
+					// we do not set entryPt;
+					// lit is just too weird.
+					entryPt = ""
 				}
+				// We know as much as we can...
+				output.EntryPoint = entryPt
+				break
 			}
 		}
 
@@ -226,7 +233,11 @@ func (vg *ViteConfig) getViteVersion() (string, error) {
 
 }
 
-func (vg *ViteConfig) setDevelopmentDefaults() error {
+func (vg *ViteConfig) SetDevelopmentDefaults() error {
+	// Make sure we can find package.json:
+	if vg.AssetsPath == "" {
+		vg.AssetsPath = "frontend"
+	}
 	pkgJSON, err := vg.parsePackageJSON()
 	if err != nil {
 		return err
@@ -240,6 +251,21 @@ func (vg *ViteConfig) setDevelopmentDefaults() error {
 	if err != nil {
 		vg.ViteVersion = DEFAULT_VITE_VERSION
 		version = vg.ViteVersion
+	}
+
+	// Check for anything already set, and if not set,
+	// use the defaults if they are not set.
+	if vg.Platform == "" {
+		vg.Platform = defaults.PackageType
+	}
+
+	if vg.EntryPoint == "" {
+		vg.EntryPoint = defaults.EntryPoint
+	}
+
+	if vg.URLPrefix == "" {
+		// Vite default
+		vg.URLPrefix = "/src/"
 	}
 
 	if vg.DevServerPort == "" {
