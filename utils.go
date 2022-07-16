@@ -34,13 +34,13 @@ type JSAppParams struct {
 	LitVersion    string `json:"lit_version,omitempty"`
 }
 
-func (vg *ViteConfig) parsePackageJSON() (*PackageJSON, error) {
+func (vc *ViteConfig) parsePackageJSON() (*PackageJSON, error) {
 	// If not set, try and find package.json
 	path := ""
-	if _, ok := vg.FS.(embed.FS); ok {
-		path = vg.AssetsPath + "/"
+	if _, ok := vc.FS.(embed.FS); ok {
+		path = vc.AssetsPath + "/"
 	}
-	buf, err := fs.ReadFile(vg.FS, path+"package.json")
+	buf, err := fs.ReadFile(vc.FS, path+"package.json")
 	if err != nil {
 		return nil, err
 	}
@@ -165,11 +165,15 @@ func analyzePackageJSON(pkgJSON *PackageJSON) *JSAppParams {
 	// If we do not have type, call it Vanilla
 	if output.PackageType == "" {
 		output.IsVanilla = true
-		// Vite choses entry points anyway
+		output.PackageType = "vanilla"
+		// Vite choses entry points anyway. For some
+		// very odd reason, the JS project is flat,
+		// and the TS project puts files in src/
+		// Why? Good question.
 		if output.HasTypeScript {
 			output.EntryPoint = "src/main.ts"
 		} else {
-			output.EntryPoint = "src/main.js"
+			output.EntryPoint = "main.js"
 		}
 	}
 
@@ -219,82 +223,101 @@ func analyzePackageJSON(pkgJSON *PackageJSON) *JSAppParams {
 	return &output
 }
 
-func (vg *ViteConfig) getViteVersion() (string, error) {
+func (vc *ViteConfig) getViteVersion() (string, error) {
 	// If it's set, use it.
-	if vg.ViteVersion != "" {
-		return vg.ViteVersion, nil
+	if vc.ViteVersion != "" {
+		return vc.ViteVersion, nil
 	}
 
-	if vg.DevDefaults == nil {
+	if vc.DevDefaults == nil {
 		return "", errors.New("not Vite project")
 	}
-	vg.ViteVersion = vg.DevDefaults.ViteMajorVer
-	return vg.DevDefaults.ViteMajorVer, nil
+	vc.ViteVersion = vc.DevDefaults.ViteMajorVer
+	return vc.DevDefaults.ViteMajorVer, nil
 
 }
 
-func (vg *ViteConfig) SetDevelopmentDefaults() error {
+func (vc *ViteConfig) SetDevelopmentDefaults() error {
 	// Make sure we can find package.json:
-	if vg.AssetsPath == "" {
-		vg.AssetsPath = "frontend"
+	if vc.JSProjectPath == "" {
+		vc.JSProjectPath = "frontend"
 	}
-	pkgJSON, err := vg.parsePackageJSON()
+	if vc.AssetsPath == "" {
+		vc.AssetsPath = vc.JSProjectPath
+	}
+
+	pkgJSON, err := vc.parsePackageJSON()
 	if err != nil {
 		return err
 	}
+
 	defaults := analyzePackageJSON(pkgJSON)
 	if defaults == nil {
 		return errors.New("invalid configuration")
 	}
-	vg.DevDefaults = defaults
-	version, err := vg.getViteVersion()
+	vc.DevDefaults = defaults
+	version, err := vc.getViteVersion()
 	if err != nil {
-		vg.ViteVersion = DEFAULT_VITE_VERSION
-		version = vg.ViteVersion
+		vc.ViteVersion = DEFAULT_VITE_VERSION
+		version = vc.ViteVersion
 	}
 
 	// Check for anything already set, and if not set,
 	// use the defaults if they are not set.
-	if vg.Platform == "" {
-		vg.Platform = defaults.PackageType
+	if vc.Platform == "" {
+		vc.Platform = defaults.PackageType
 	}
 
-	if vg.EntryPoint == "" {
-		vg.EntryPoint = defaults.EntryPoint
+	if vc.EntryPoint == "" {
+		vc.EntryPoint = defaults.EntryPoint
 	}
 
-	if vg.URLPrefix == "" {
+	if vc.URLPrefix == "" {
 		// Vite default
-		vg.URLPrefix = "/src/"
+		vc.URLPrefix = "/src/"
 	}
 
-	if vg.DevServerPort == "" {
+	if vc.DevServerPort == "" {
 		if version == "2" {
-			vg.DevServerPort = DEFAULT_PORT_V2
+			vc.DevServerPort = DEFAULT_PORT_V2
 		} else {
-			vg.DevServerPort = DEFAULT_PORT_V3
+			vc.DevServerPort = DEFAULT_PORT_V3
 		}
 	}
 
-	if vg.DevServerDomain == "" {
-		vg.DevServerDomain = "localhost"
+	if vc.DevServerDomain == "" {
+		vc.DevServerDomain = "localhost"
 	}
 
 	return nil
 
 }
 
-func (vg *ViteConfig) buildDevServerBaseURL() string {
+func (vc *ViteConfig) SetProductionDefaults() error {
+	if vc.JSProjectPath == "" {
+		vc.JSProjectPath = "frontend"
+	}
+	if vc.AssetsPath == "" {
+		vc.AssetsPath = vc.JSProjectPath + "/dist"
+	}
+	if vc.URLPrefix == "" {
+		vc.URLPrefix = "/assets/"
+	}
+
+	return nil
+}
+
+func (vc *ViteConfig) buildDevServerBaseURL() string {
 	protocol := "http"
-	if vg.HTTPS {
+	if vc.HTTPS {
 		protocol = "https"
 	}
 
 	return fmt.Sprintf(
 		"%s://%s:%s",
 		protocol,
-		vg.DevServerDomain,
-		vg.DevServerPort,
+		vc.DevServerDomain,
+		vc.DevServerPort,
 	)
 
 }

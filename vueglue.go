@@ -21,7 +21,7 @@ type ViteConfig struct {
 	FS fs.FS
 
 	// DevDefaults is best guess for defaults
-	DevDefaults *JSAppParams
+	DevDefaults *JSAppParams `json:"-"`
 
 	// Environment (development|production). In development mode,
 	// the package sets up hot reloading. In production, the
@@ -29,7 +29,11 @@ type ViteConfig struct {
 	// in the Go app.
 	Environment string
 
-	//AssetsPath (typically dist for prod, and your Vue project
+	// JSProjectPath is where your JS project is relative to the
+	// root of your project. Default: frontend
+	JSProjectPath string
+
+	//AssetsPath (typically {JSProjectPath}/dist for prod, and your JS project
 	// directory for dev)
 	AssetsPath string
 
@@ -156,6 +160,11 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 	}
 
 	if config.Environment == "production" {
+		err := config.SetProductionDefaults()
+		if err != nil {
+			return nil, err
+		}
+
 		// Get the manifest file
 		manifestFile := "manifest.json"
 		contents, err := fs.ReadFile(correctedFS, manifestFile)
@@ -168,7 +177,10 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 		}
 
 	} else {
-		config.SetDevelopmentDefaults()
+		err := config.SetDevelopmentDefaults()
+		if err != nil {
+			return nil, err
+		}
 		glue.BaseURL = config.buildDevServerBaseURL()
 		glue.MainModule = config.EntryPoint
 	}

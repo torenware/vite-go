@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"html/template"
@@ -97,7 +98,8 @@ func main() {
 	flag.Parse()
 
 	// save away our pid if we need to use a makefile to stop
-	// this process
+	// this process. You don't need this to use Vite, but it does
+	// make this test program easier to use.
 	if pidFile != "" {
 		pid := strconv.Itoa(os.Getpid())
 		_ = ioutil.WriteFile(pidFile, []byte(pid), 0644)
@@ -114,15 +116,16 @@ func main() {
 
 	// We pass the file system with the built Vue
 	// program, and the path from the root of that
-	// file system to the "assets" directory.t
-
-	//config.FS = os.DirFS(assets)
-	config.FS = dist
+	// file system to the "assets" directory.
+	if config.EntryPoint == "production" {
+		config.FS = os.DirFS("frontend/dist")
+	} else {
+		// Use the embed.
+		config.FS = dist
+	}
+	//
 
 	if config.Environment == "production" {
-		if config.AssetsPath == "" {
-			config.AssetsPath = "dist"
-		}
 		config.URLPrefix = "/assets/"
 	} else if config.Environment == "development" {
 		log.Printf("pulling defaults using package.json")
@@ -146,10 +149,12 @@ func main() {
 		log.Println("could not set up static file server", err)
 		return
 	}
-	mux.Handle("/src/", fsHandler)
+	mux.Handle(config.URLPrefix, fsHandler)
 	mux.Handle("/", logRequest(http.HandlerFunc(pageWithAVue)))
 
 	log.Println("Starting server on :4000")
+	generatedConfig, _ := json.MarshalIndent(config, "", "  ")
+	log.Println("Generated Configuration:\n", string(generatedConfig))
 	err = http.ListenAndServe(":4000", mux)
 	log.Fatal(err)
 

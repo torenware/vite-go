@@ -1,7 +1,6 @@
 JS_DIR=frontend
 INSTALL_ONCE=$(JS_DIR)
 CONFIG_FILE := vite.config.ts
-# VITE_PORT=3000
 GO_APP_PORT=4000
 VITE_PID=/tmp/vite-script.pid
 GO_PID=/tmp/vite-go.pid
@@ -22,11 +21,16 @@ $(INSTALL_ONCE): run-install-check
 run-install-check:
 	./install-vue.sh
 
-dist: $(CONFIG_FILE) $(JS_DIR)
+# we don't even need a config file
+# since Vanilla builds lack these.
+$(JS_DIR)/dist:  $(JS_DIR) 
 	@echo "run javascript build..."
-	@cd $(JS_DIR); npm run build
+	@cd $(JS_DIR); node_modules/.bin/vite build  --manifest manifest.json
 
-dist/manifest.json dist/assets: dist
+$(JS_DIR)/node_modules:
+	@cd $(JS_DIR); npm install
+
+$(JS_DIR)/dist/manifest.json $(JS_DIR)/dist/assets: $(JS_DIR)/dist
 
 go.mod:
 	@go mod init vitemodtest
@@ -44,13 +48,13 @@ dev_go: stop_dev go.sum
 	@ go run . -pid $(GO_PID) &
 
 
-build: clean go.sum dist/manifest.json dist/assets test-template.tmpl
+build: clean go.sum $(JS_DIR)/dist/manifest.json $(JS_DIR)/dist/assets test-template.tmpl
 	@echo building go binary...
 	@go build -o test_program .
 
-preview: build
+preview: stop_preview  $(JS_DIR)/node_modules build
 	@echo run test_program
-	@ ./test_program -env production -assets dist
+	@ ./test_program -env production -assets $(JS_DIR)/dist -pid /tmp/vite-go.pid
 
 stop_dev:
 ifneq (,$(wildcard $(VITE_PID)))
@@ -65,3 +69,12 @@ ifneq (,$(wildcard $(GO_PID)))
 else
 	@echo Go already stopped
 endif
+
+stop_preview:
+ifneq (,$(wildcard $(GO_PID)))
+	@echo Stopping test_program
+	@! ps -p $$(cat $(GO_PID)) &>/dev/null || kill $$(cat $(GO_PID) 2>/dev/null) > /dev/null
+else
+	@echo Go already stopped
+endif
+
