@@ -20,6 +20,9 @@ type ViteConfig struct {
 	// FS is the filesystem where assets can be loaded.
 	FS fs.FS
 
+	// DevDefaults is best guess for defaults
+	DevDefaults *JSAppParams
+
 	// Environment (development|production). In development mode,
 	// the package sets up hot reloading. In production, the
 	// package builds the Vue/Vuex production files and embeds them
@@ -168,11 +171,6 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 		config.setDevelopmentDefaults()
 		glue.BaseURL = config.buildDevServerBaseURL()
 		glue.MainModule = config.EntryPoint
-		// if config.DevServer == "" {
-		// 	glue.DevServer = "http://localhost:3000"
-		// } else {
-		// 	glue.DevServer = config.DevServer
-		// }
 	}
 
 	glue.Environment = config.Environment
