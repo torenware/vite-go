@@ -205,15 +205,16 @@ You should check that the glue (`$vue` in our example) is actually defined as I 
 The sample program in [`examples/sample-program`](./examples/sample-program) has much more detail, and actually runs.
 
 ## Configuration
+Vite-Go is fairly smart about your Vite Javascript project, and will examine your package.json file on start up.  If you do not override the standard settings in your vite.config.js file, `vite-go` will probably choose to do the appropriate thing.
 
-As mentioned above, a ViteConfig object must be passed to the `NewVueGlue()` routine. Here are the major fields and how to use them:
+As mentioned above, a ViteConfig object must be passed to the `NewVueGlue()` routine, with anything you want to override. Here are the major fields and how to use them:
 
 | Field | Purpose | Default Setting |
 |---    |---      |---              |
 | **Environment** | What mode you want vite to run in. | development |
 | **FS** | A fs.Embed or fs.DirFS | none; required. |
 | **AssetPath** | *Development:* location of your Javascript files<br>*Production:* location of your built Javascript project | *Development:* frontend<br>*Production:* dist|
-| **Platform** | Any platform supported by Vite. vue and react are known to work; other platforms *may* work if you adjust the other configurations correctly. | vue |
+| **Platform** | Any platform supported by Vite. vue and react are known to work; other platforms *may* work if you adjust the other configurations correctly. | Based upon your package.json settings. |
 | **EntryPoint** | Entry point script for your Javascript | src/main.js |
 | **ViteVersion** | Vite major version ("2" or "3") | Best guess based on your package.json file in your project. If you want to make sure, specify the version you want. |
 | **DevServerPort** | Port the dev server will listen on; typically 3000 in version 2, 5173 in version 3 | Best guess based on version | 
@@ -222,7 +223,7 @@ As mentioned above, a ViteConfig object must be passed to the `NewVueGlue()` rou
 
 ## Caveats
 
-This code is a proof of concept, and is relatively new; in particular, there may be some configurations you can use in `vite.config.js` that won't work as I expect. If so: [please open an issue on Github](https://github.com/torenware/vite-go/issues).  I've posted the code so people can see it, and try things out. I think you'll find it useful.
+This code isrelatively new; in particular, there may be some configurations you can use in `vite.config.js` that won't work as I expect. If so: [please open an issue on Github](https://github.com/torenware/vite-go/issues).  I've posted the code so people can see it, and try things out. I think you'll find it useful.
 
 
 

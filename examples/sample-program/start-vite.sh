@@ -18,6 +18,15 @@ if [ ! -d $JS_DIR ]; then
   exit 1
 fi
 
+# Make sure install has been run
+if [ ! -d "$JS_DIR/node_modules" ]; then
+  echo "New js dir; running npm install"
+  BASE_DIR=$(pwd)
+  cd $JS_DIR
+  npm install
+  cd $BASE_DIR
+fi
+
 cd $JS_DIR
 node_modules/.bin/vite -l silent </dev/null &>/dev/null &
 echo $! >$VITE_PID
