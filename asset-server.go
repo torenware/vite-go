@@ -21,7 +21,7 @@ var embedFiles embed.FS
 func (vg *VueGlue) FileServer() (http.Handler, error) {
 	// First, make sure if our fs.FS is from an embed.FS,
 	// that we adjust where the FS is "pointing".
-	target, err := correctEmbedFS(vg.DistFS, vg.AssetPath)
+	target, err := correctEmbedFS(vg.DistFS, vg.JSProjectPath)
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +44,9 @@ func (vg *VueGlue) FileServer() (http.Handler, error) {
 // We assume that the fs.Dir's top level is pointed at the contents
 // of where the assets are, and not its parent directory as would
 // typically be the case for an embed.FS instance.
+//
+// In both prod and dev, serveDir should point to the js dir.
+// We will adjust prod to add the relative path to dist.
 func (vg *VueGlue) guardedFileServer(serveDir fs.FS) http.Handler {
 	stripPrefix := "/"
 	handler := func(w http.ResponseWriter, r *http.Request) {
@@ -90,9 +93,30 @@ func (vg *VueGlue) guardedFileServer(serveDir fs.FS) http.Handler {
 			}
 
 		}
+		var loggingFS http.Handler
+		var fileServer http.Handler
+		if vg.Environment == "production" {
+			// We actually want to read from the dist subdir of
+			// the JSDir.
+			newDir, err := fs.Sub(serveDir, vg.AssetPath)
+			if err != nil {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
 
-		loggingFS := logRequest(http.FileServer(http.FS(serveDir)))
-		fileServer := http.StripPrefix(stripPrefix, loggingFS)
+			// temp
+			items, _ := fs.Glob(newDir, "*")
+			log.Println(items)
+			// end temp
+
+			loggingFS = logRequest(http.FileServer(http.FS(newDir)))
+			fileServer = loggingFS
+
+		} else {
+			loggingFS = logRequest(http.FileServer(http.FS(serveDir)))
+			fileServer = http.StripPrefix(stripPrefix, loggingFS)
+		}
+
 		fileServer.ServeHTTP(w, r)
 	}
 
@@ -144,20 +168,20 @@ func serveOneFile(w http.ResponseWriter, r *http.Request, data []byte, ctype str
 }
 
 type WriterWrapper struct {
-	Writer     http.ResponseWriter
-	StatusCode int
+	Writer  http.ResponseWriter
+	RetCode int
 }
 
 func NewWWWRiter(w http.ResponseWriter) WriterWrapper {
 	return WriterWrapper{
-		Writer:     w,
-		StatusCode: 200,
+		Writer:  w,
+		RetCode: 200,
 	}
 }
 
 func (w WriterWrapper) WriteHeader(status int) {
-	w.StatusCode = status
 	w.Writer.WriteHeader(status)
+	w.RetCode = status
 }
 
 func (w WriterWrapper) Header() http.Header {
@@ -175,7 +199,7 @@ func logRequest(next http.Handler) http.Handler {
 		log.Printf(
 			"%s - %s %s %s (%d)",
 			r.RemoteAddr, r.Proto, r.Method,
-			r.URL.RequestURI(), ww.StatusCode,
+			r.URL.RequestURI(), ww.RetCode,
 		)
 	})
 }

@@ -44,8 +44,6 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig({
   plugins: [vue()],
   build: {
-    sourcemap: true,
-    manifest: true,
     rollupOptions: {
       input: {
         main: 'src/main.ts',
@@ -103,7 +101,7 @@ func main() {
 		AssetsPath:  "dist",
 		EntryPoint:  "src/main.js",
 		Platform:    "vue",
-		FS:          frontend/dist,
+		FS:          frontend,
 	}
 
     // OR this:
@@ -212,7 +210,8 @@ As mentioned above, a ViteConfig object must be passed to the `NewVueGlue()` rou
 |---    |---      |---              |
 | **Environment** | What mode you want vite to run in. | development |
 | **FS** | A fs.Embed or fs.DirFS | none; required. |
-| **AssetPath** | *Development:* location of your Javascript files<br>*Production:* location of your built Javascript project | *Development:* frontend<br>*Production:* frontend/dist|
+| **JSProjectPath** | Path to your Javascript files | frontend |
+| **AssetPath** | Location of the built distribution directory | *Production:* dist|
 | **Platform** | Any platform supported by Vite. vue and react are known to work; other platforms *may* work if you adjust the other configurations correctly. | Based upon your package.json settings. |
 | **EntryPoint** | Entry point script for your Javascript | Best guess based on package.json |
 | **ViteVersion** | Vite major version ("2" or "3") | Best guess based on your package.json file in your project. If you want to make sure, specify the version you want. |

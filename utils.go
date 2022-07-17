@@ -38,7 +38,7 @@ func (vc *ViteConfig) parsePackageJSON() (*PackageJSON, error) {
 	// If not set, try and find package.json
 	path := ""
 	if _, ok := vc.FS.(embed.FS); ok {
-		path = vc.AssetsPath + "/"
+		path = vc.JSProjectPath + "/"
 	}
 	buf, err := fs.ReadFile(vc.FS, path+"package.json")
 	if err != nil {
@@ -242,9 +242,6 @@ func (vc *ViteConfig) SetDevelopmentDefaults() error {
 	if vc.JSProjectPath == "" {
 		vc.JSProjectPath = "frontend"
 	}
-	if vc.AssetsPath == "" {
-		vc.AssetsPath = vc.JSProjectPath
-	}
 
 	pkgJSON, err := vc.parsePackageJSON()
 	if err != nil {
@@ -298,7 +295,7 @@ func (vc *ViteConfig) SetProductionDefaults() error {
 		vc.JSProjectPath = "frontend"
 	}
 	if vc.AssetsPath == "" {
-		vc.AssetsPath = vc.JSProjectPath + "/dist"
+		vc.AssetsPath = "dist"
 	}
 	if vc.URLPrefix == "" {
 		vc.URLPrefix = "/assets/"

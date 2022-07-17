@@ -33,8 +33,7 @@ type ViteConfig struct {
 	// root of your project. Default: frontend
 	JSProjectPath string
 
-	//AssetsPath (typically {JSProjectPath}/dist for prod, and your JS project
-	// directory for dev)
+	//AssetsPath relative to the JSProjectPath. Empty for dev, dist for prod
 	AssetsPath string
 
 	// "2" or "3". If not set, we try to guess by looking
@@ -101,9 +100,10 @@ type VueGlue struct {
 	// DevServer is the URI of the Vite development server
 	DevServer string
 
-	// AssetPath is the path from the root of DistFS. This
-	// allows us to check if the FS is correctly "pointed"
-	// to the diretory containing the assets.
+	// JSProjectPath is the location of the JS project.
+	JSProjectPath string
+
+	// AssetPath is the relative path from the JSDirectory.
 	AssetPath string
 
 	// Debug mode
@@ -154,7 +154,7 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 	var glue *VueGlue
 	glue = &VueGlue{}
 
-	correctedFS, err := correctEmbedFS(config.FS, config.AssetsPath)
+	correctedFS, err := correctEmbedFS(config.FS, config.JSProjectPath)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 		}
 
 		// Get the manifest file
-		manifestFile := "manifest.json"
+		manifestFile := config.AssetsPath + "/manifest.json"
 		contents, err := fs.ReadFile(correctedFS, manifestFile)
 		if err != nil {
 			return nil, err
@@ -186,6 +186,7 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 	}
 
 	glue.Environment = config.Environment
+	glue.JSProjectPath = config.JSProjectPath
 	glue.AssetPath = config.AssetsPath
 	glue.Platform = config.Platform
 	glue.DistFS = correctedFS

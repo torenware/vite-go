@@ -14,7 +14,9 @@
         "-env",
         "production",
         "-assets",
-        "frontend/dist"
+        "frontend",
+        "-dist",
+        "dist"
       ]
     },
     {

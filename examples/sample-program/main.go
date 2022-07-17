@@ -52,10 +52,11 @@ func logRequest(next http.Handler) http.Handler {
 }
 
 func serveOneFile(w http.ResponseWriter, r *http.Request, uri, contentType string) {
-	buf, err := fs.ReadFile(dist, uri)
+	strippedURI := uri[1:]
+	buf, err := fs.ReadFile(vueData.DistFS, strippedURI)
 	if err != nil {
 		// Try public dir
-		buf, err = fs.ReadFile(dist, "/public"+uri)
+		buf, err = fs.ReadFile(vueData.DistFS, "public/"+strippedURI)
 	}
 
 	// If we ended up nil, render the file out.
@@ -97,6 +98,7 @@ func pageWithAVue(w http.ResponseWriter, r *http.Request) {
 			}
 
 			serveOneFile(w, r, r.RequestURI, contentType)
+			return
 		}
 
 	}
@@ -114,7 +116,8 @@ func main() {
 	var config vueglue.ViteConfig
 
 	flag.StringVar(&config.Environment, "env", "development", "development|production")
-	flag.StringVar(&config.AssetsPath, "assets", "", "location of javascript files. dist for production.")
+	flag.StringVar(&config.JSProjectPath, "assets", "", "location of javascript files.")
+	flag.StringVar(&config.AssetsPath, "dist", "", "dist directory relative to the JS project directory.")
 	flag.StringVar(&config.EntryPoint, "entryp", "", "relative path of the entry point of the js app.")
 	flag.StringVar(&config.Platform, "platform", "", "vue|react|svelte")
 	flag.StringVar(&pidFile, "pid", "", "location of optional pid file.")
@@ -141,7 +144,7 @@ func main() {
 	// program, and the path from the root of that
 	// file system to the "assets" directory.
 	if config.EntryPoint == "production" {
-		config.FS = os.DirFS("frontend/dist")
+		config.FS = os.DirFS("frontend")
 	} else {
 		// Use the embed.
 		config.FS = dist

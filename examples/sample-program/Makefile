@@ -54,7 +54,7 @@ build: clean go.sum $(JS_DIR)/dist/manifest.json $(JS_DIR)/dist/assets test-temp
 
 preview: stop_preview  $(JS_DIR)/node_modules build
 	@echo run test_program
-	@ ./test_program -env production -assets $(JS_DIR)/dist -pid /tmp/vite-go.pid
+	@ ./test_program -env production -assets $(JS_DIR) -dist dist -pid /tmp/vite-go.pid
 
 stop_dev:
 ifneq (,$(wildcard $(VITE_PID)))
