@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"syscall"
 
@@ -50,19 +51,19 @@ func logRequest(next http.Handler) http.Handler {
 	})
 }
 
-func serveOneFile(uri string, w http.ResponseWriter, r *http.Request) {
-	// serving this out of our embed
-	path := "frontend"
-	contentType := "image/svg+xml"
-	if uri == "/vite.svg" {
-		path += "/public/vite.svg"
-		buf, err := fs.ReadFile(dist, path)
-		if err == nil {
-			// not an error; letting the error case fall through
-			w.Header().Add("Content-Type", contentType)
-			w.Write(buf)
-			return
-		}
+func serveOneFile(w http.ResponseWriter, r *http.Request, uri, contentType string) {
+	buf, err := fs.ReadFile(dist, uri)
+	if err != nil {
+		// Try public dir
+		buf, err = fs.ReadFile(dist, "/public"+uri)
+	}
+
+	// If we ended up nil, render the file out.
+	if err == nil {
+		// not an error; letting the error case fall through
+		w.Header().Add("Content-Type", contentType)
+		w.Write(buf)
+		return
 	}
 
 	// Otherwise, we cannot handle it, so 404 it is.
@@ -72,13 +73,35 @@ func serveOneFile(uri string, w http.ResponseWriter, r *http.Request) {
 func pageWithAVue(w http.ResponseWriter, r *http.Request) {
 	// since we are using vite test pages, they assume
 	// that the vite logo is at /vite.svg.  Let's handle
-	// that case here.
-	if r.RequestURI == "/vite.svg" {
-		log.Printf("vite logo requested")
-		serveOneFile(r.RequestURI, w, r)
-		return
+	// that case here. Since we're only serving one
+	// page via Go, we'll pass svg, icongs and jpg
+	// on to the dev server via a redirect
+	re := regexp.MustCompile(`^/([^.]+)\.(svg|ico|jpg)$`)
+	matches := re.FindStringSubmatch(r.RequestURI)
+	if matches != nil {
+		if vueData.Environment == "development" {
+			log.Printf("vite logo requested")
+			url := vueData.BaseURL + r.RequestURI
+			http.Redirect(w, r, url, http.StatusPermanentRedirect)
+			return
+		} else {
+			// production; we need to render this ourselves.
+			var contentType string
+			switch matches[2] {
+			case "svg":
+				contentType = "image/svg+xml"
+			case "ico":
+				contentType = "image/x-icon"
+			case "jpg":
+				contentType = "image/jpeg"
+			}
+
+			serveOneFile(w, r, r.RequestURI, contentType)
+		}
+
 	}
 
+	// our go page, which will host our javascript.
 	t, err := template.ParseFiles("./test-template.tmpl")
 	if err != nil {
 		log.Fatal(err)

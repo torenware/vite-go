@@ -44,7 +44,6 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig({
   plugins: [vue()],
   build: {
-    outDir: '../cmd/web/dist',
     sourcemap: true,
     manifest: true,
     rollupOptions: {
@@ -72,10 +71,10 @@ export default defineConfig({
 
 ```
 
-The essential piece here is the vue plugin and the `build.manifest` line, since `vite-go` needs the manifest file to be present in order to work correctly.
+The essential piece here is the vue plugin (or whatever plugin you need instead for React, Preact or Svelte) and the `build.manifest` line, since `vite-go` needs the manifest file to be present in order to work correctly.
 
 
-Here's some pseudo sample code that uses the go 1.16+ embedding feature for the production build, and a regular disk directory (`frontend` in our case) as a development directory:
+Here's some sample pseudo code that uses the go 1.16+ embedding feature for the production build, and a regular disk directory (`frontend` in our case) as a development directory:
 
 ```golang
 
@@ -104,7 +103,7 @@ func main() {
 		AssetsPath:  "dist",
 		EntryPoint:  "src/main.js",
 		Platform:    "vue",
-		FS:          dist,
+		FS:          frontend/dist,
 	}
 
     // OR this:
@@ -213,7 +212,7 @@ As mentioned above, a ViteConfig object must be passed to the `NewVueGlue()` rou
 |---    |---      |---              |
 | **Environment** | What mode you want vite to run in. | development |
 | **FS** | A fs.Embed or fs.DirFS | none; required. |
-| **AssetPath** | *Development:* location of your Javascript files<br>*Production:* location of your built Javascript project | *Development:* frontend<br>*Production:* dist|
+| **AssetPath** | *Development:* location of your Javascript files<br>*Production:* location of your built Javascript project | *Development:* frontend<br>*Production:* frontend/dist|
 | **Platform** | Any platform supported by Vite. vue and react are known to work; other platforms *may* work if you adjust the other configurations correctly. | Based upon your package.json settings. |
 | **EntryPoint** | Entry point script for your Javascript | Best guess based on package.json |
 | **ViteVersion** | Vite major version ("2" or "3") | Best guess based on your package.json file in your project. If you want to make sure, specify the version you want. |

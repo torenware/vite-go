@@ -90,6 +90,7 @@ func (vg *VueGlue) guardedFileServer(serveDir fs.FS) http.Handler {
 			}
 
 		}
+
 		loggingFS := logRequest(http.FileServer(http.FS(serveDir)))
 		fileServer := http.StripPrefix(stripPrefix, loggingFS)
 		fileServer.ServeHTTP(w, r)
@@ -142,11 +143,39 @@ func serveOneFile(w http.ResponseWriter, r *http.Request, data []byte, ctype str
 	}
 }
 
-func logRequest(next http.Handler) http.Handler {
-	log.Println("invoked log handler")
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
+type WriterWrapper struct {
+	Writer     http.ResponseWriter
+	StatusCode int
+}
 
-		next.ServeHTTP(w, r)
+func NewWWWRiter(w http.ResponseWriter) WriterWrapper {
+	return WriterWrapper{
+		Writer:     w,
+		StatusCode: 200,
+	}
+}
+
+func (w WriterWrapper) WriteHeader(status int) {
+	w.StatusCode = status
+	w.Writer.WriteHeader(status)
+}
+
+func (w WriterWrapper) Header() http.Header {
+	return w.Writer.Header()
+}
+
+func (w WriterWrapper) Write(buf []byte) (int, error) {
+	return w.Writer.Write(buf)
+}
+
+func logRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ww := NewWWWRiter(w)
+		next.ServeHTTP(ww, r)
+		log.Printf(
+			"%s - %s %s %s (%d)",
+			r.RemoteAddr, r.Proto, r.Method,
+			r.URL.RequestURI(), ww.StatusCode,
+		)
 	})
 }

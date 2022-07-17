@@ -5,7 +5,20 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Sample",
+      "name": "Launch Preview",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "args": [
+        "-env",
+        "production",
+        "-assets",
+        "frontend/dist"
+      ]
+    },
+    {
+      "name": "Launch Dev",
       "type": "go",
       "request": "launch",
       "mode": "auto",
