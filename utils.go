@@ -55,11 +55,7 @@ func (vc *ViteConfig) parsePackageJSON() (*PackageJSON, error) {
 }
 
 func analyzePackageJSON(pkgJSON *PackageJSON) *JSAppParams {
-	semVer, err := regexp.Compile(`^\^((\d+)\.\d+\.\d+)$`)
-	if err != nil {
-		// remove once we verify the regexp
-		panic(err)
-	}
+	semVer := regexp.MustCompile(`^[\^]*((\d+)\.\d+\.\d+)$`)
 
 	// parse for a ver; return the full version,
 	// and the major version. Empty strings if
@@ -69,8 +65,8 @@ func analyzePackageJSON(pkgJSON *PackageJSON) *JSAppParams {
 		var major string
 		var fullVers string
 		if matches != nil {
-			major = matches[1]
-			fullVers = matches[2]
+			major = matches[2]
+			fullVers = matches[1]
 		}
 		return major, fullVers
 	}

@@ -55,7 +55,7 @@ Usage of ./test_program:
 
 You'll need to have the make utility and npm installed for the demo.
 
-The Makefile for the sample project is pretty full featured, since I use it to test this module. Some feature you might find useful to test your own project:
+The Makefile for the sample project is pretty full featured, since I use it to test this module. Some features you might find useful to test your own project:
 
 | Make Invocation | What It Does |
 |:--- |:--- |
