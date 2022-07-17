@@ -44,6 +44,7 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig({
   plugins: [vue()],
   build: {
+    manifest: 'manifest.json',
     rollupOptions: {
       input: {
         main: 'src/main.ts',
