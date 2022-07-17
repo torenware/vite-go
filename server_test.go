@@ -13,11 +13,11 @@ var embedTest embed.FS
 
 func TestInitLib(t *testing.T) {
 	config := &ViteConfig{
-		Environment: "development",
-		AssetsPath:  "tests/testdata",
-		URLPrefix:   "/",
-		FS:          os.DirFS("testdata"),
-		EntryPoint:  "server.js",
+		Environment:   "development",
+		JSProjectPath: "testdata",
+		URLPrefix:     "/",
+		FS:            os.DirFS("testdata"),
+		EntryPoint:    "server.js",
 	}
 
 	glue, err := initializeVueGlue(config)
@@ -37,11 +37,11 @@ func TestInitLib(t *testing.T) {
 
 func TestServerHandler(t *testing.T) {
 	config := &ViteConfig{
-		Environment: "development",
-		AssetsPath:  "testdata",
-		URLPrefix:   "/",
-		FS:          os.DirFS("testdata"),
-		EntryPoint:  "server.js",
+		Environment:   "development",
+		JSProjectPath: "testdata",
+		URLPrefix:     "/",
+		FS:            os.DirFS("testdata"),
+		EntryPoint:    "server.js",
 	}
 	glue, err := initializeVueGlue(config)
 	if err != nil {
@@ -111,11 +111,11 @@ func TestFileVisibility(t *testing.T) {
 
 func TestEmbedAccess(t *testing.T) {
 	config := &ViteConfig{
-		Environment: "development",
-		AssetsPath:  "testdata",
-		URLPrefix:   "/",
-		FS:          embedTest,
-		EntryPoint:  "server.js",
+		Environment:   "development",
+		JSProjectPath: "testdata",
+		URLPrefix:     "/",
+		FS:            embedTest,
+		EntryPoint:    "server.js",
 	}
 	srv, err := bootStrapServer(config)
 	if err != nil {

@@ -10,12 +10,12 @@ import (
 func initializeVueGlue(config *ViteConfig) (*VueGlue, error) {
 	if config == nil {
 		config = &ViteConfig{
-			Environment: "development",
-			AssetsPath:  "tests/testdata",
-			URLPrefix:   "/",
-			FS:          os.DirFS("testdata"),
-			EntryPoint:  "main.js",
-			ViteVersion: "2",
+			Environment:   "development",
+			JSProjectPath: "testdata",
+			URLPrefix:     "/",
+			FS:            os.DirFS("testdata"),
+			EntryPoint:    "main.js",
+			ViteVersion:   "2",
 		}
 	}
 	glue, err := NewVueGlue(config)
