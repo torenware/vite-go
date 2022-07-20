@@ -5,6 +5,20 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Vite Config",
+      "program": "${workspaceFolder}/frontend/node_modules/vite/bin/vite.js",
+      "request": "launch",
+      "args": [
+        "-c",
+        "frontend/vite.config.js"
+      ],
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node",
+      "stopOnEntry": true
+    },
+    {
       "name": "Launch Preview",
       "type": "go",
       "request": "launch",
