@@ -172,23 +172,23 @@ type WriterWrapper struct {
 	RetCode int
 }
 
-func NewWWWRiter(w http.ResponseWriter) WriterWrapper {
-	return WriterWrapper{
+func NewWWWRiter(w http.ResponseWriter) *WriterWrapper {
+	return &WriterWrapper{
 		Writer:  w,
 		RetCode: 200,
 	}
 }
 
-func (w WriterWrapper) WriteHeader(status int) {
-	w.Writer.WriteHeader(status)
+func (w *WriterWrapper) WriteHeader(status int) {
 	w.RetCode = status
+	w.Writer.WriteHeader(status)
 }
 
-func (w WriterWrapper) Header() http.Header {
+func (w *WriterWrapper) Header() http.Header {
 	return w.Writer.Header()
 }
 
-func (w WriterWrapper) Write(buf []byte) (int, error) {
+func (w *WriterWrapper) Write(buf []byte) (int, error) {
 	return w.Writer.Write(buf)
 }
 
@@ -196,10 +196,12 @@ func logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ww := NewWWWRiter(w)
 		next.ServeHTTP(ww, r)
-		log.Printf(
-			"%s - %s %s %s (%d)",
-			r.RemoteAddr, r.Proto, r.Method,
-			r.URL.RequestURI(), ww.RetCode,
-		)
+		defer func() {
+			log.Printf(
+				"%s - %s %s %s (%d)",
+				r.RemoteAddr, r.Proto, r.Method,
+				r.URL.RequestURI(), ww.RetCode,
+			)
+		}()
 	})
 }

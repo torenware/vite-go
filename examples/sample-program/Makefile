@@ -35,6 +35,7 @@ $(JS_DIR)/dist/manifest.json $(JS_DIR)/dist/assets: $(JS_DIR)/dist
 go.mod:
 	@go mod init vitemodtest
 	@go get github.com/torenware/vite-go@latest
+	@go mod tidy
 
 go.sum: go.mod
 

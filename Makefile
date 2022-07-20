@@ -1,6 +1,8 @@
 
 BROWSERFY := $(shell command -v browserify 2> /dev/null )
 COLIMA := $(shell command -v colima -h 2>/dev/null)
+# Support local github style actions with act utility
+LOCAL_ACT := $(shell comman -v act --version 2>/dev/null )
 
 clean:
 	@echo clean up preable files...
@@ -33,8 +35,12 @@ test:
 
 # Run github workflow locally
 workflow:
+ifeq (, $(shell which act))
+	@echo Running workflows locally requires the act utility
+else
 ifndef COLIMA
-	act
+	@ act
 else
 	@ DOCKER_HOST=unix://${HOME}/.colima/docker.sock act
+endif
 endif
