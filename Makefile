@@ -1,5 +1,6 @@
 
 BROWSERFY := $(shell command -v browserify 2> /dev/null )
+COLIMA := $(shell command -v colima -h 2>/dev/null)
 
 clean:
 	@echo clean up preable files...
@@ -30,3 +31,10 @@ test:
 	@echo running tests...
 	@go test -v .
 
+# Run github workflow locally
+workflow:
+ifndef COLIMA
+	act
+else
+	@ DOCKER_HOST=unix://${HOME}/.colima/docker.sock act
+endif
