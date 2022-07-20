@@ -167,12 +167,14 @@ func serveOneFile(w http.ResponseWriter, r *http.Request, data []byte, ctype str
 	}
 }
 
+// Logger writes out status codes:
+
 type WriterWrapper struct {
 	Writer  http.ResponseWriter
 	RetCode int
 }
 
-func NewWWWRiter(w http.ResponseWriter) *WriterWrapper {
+func NewRespWriter(w http.ResponseWriter) *WriterWrapper {
 	return &WriterWrapper{
 		Writer:  w,
 		RetCode: 200,
@@ -194,7 +196,7 @@ func (w *WriterWrapper) Write(buf []byte) (int, error) {
 
 func logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ww := NewWWWRiter(w)
+		ww := NewRespWriter(w)
 		next.ServeHTTP(ww, r)
 		defer func() {
 			log.Printf(
