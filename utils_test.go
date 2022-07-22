@@ -18,16 +18,16 @@ func TestDefaultParams(t *testing.T) {
 		typescript bool
 		entryPt    string
 	}{
-		{"package-preact-ts.json", "preact", "3", "5173", true, "src/main.tsx"},
-		{"package-react-ts.json", "react", "3", "5173", true, "src/main.tsx"},
-		{"package-react.json", "react", "3", "5173", false, "src/main.jsx"},
-		{"package-svelte-ts.json", "svelte", "3", "5173", true, "src/main.ts"},
-		{"package-svelte.json", "svelte", "3", "5173", false, "src/main.js"},
-		{"package-vanilla-ts.json", "vanilla", "3", "5173", true, "src/main.ts"},
-		{"package-vanilla.json", "vanilla", "3", "5173", false, "main.js"},
-		{"package-vue-ts.json", "vue", "3", "5173", true, "src/main.ts"},
+		{"package-preact-ts.json", "preact", "3", "5137", true, "src/main.tsx"},
+		{"package-react-ts.json", "react", "3", "5137", true, "src/main.tsx"},
+		{"package-react.json", "react", "3", "5137", false, "src/main.jsx"},
+		{"package-svelte-ts.json", "svelte", "3", "5137", true, "src/main.ts"},
+		{"package-svelte.json", "svelte", "3", "5137", false, "src/main.js"},
+		{"package-vanilla-ts.json", "vanilla", "3", "5137", true, "src/main.ts"},
+		{"package-vanilla.json", "vanilla", "3", "5137", false, "main.js"},
+		{"package-vue-ts.json", "vue", "3", "5137", true, "src/main.ts"},
 		{"package-vue-v2.json", "vue", "2", "3000", false, "src/main.js"},
-		{"package-vue3.json", "vue", "3", "5173", false, "src/main.js"},
+		{"package-vue3.json", "vue", "3", "5137", false, "src/main.js"},
 	}
 
 	for _, test := range tstList {

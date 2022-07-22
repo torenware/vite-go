@@ -32,7 +32,7 @@ func TestDevServer(t *testing.T) {
 		t.Fatalf("tags did not render: %s", err)
 	}
 	// t.Logf("tags: %s", string(tags))
-	shouldContain = "http://localhost:5173/main.ts"
+	shouldContain = "http://localhost:5137/main.ts"
 	if !strings.Contains(string(tags), shouldContain) {
 		t.Fatalf("tags did not contain '%s'", shouldContain)
 	}
