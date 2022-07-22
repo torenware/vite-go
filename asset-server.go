@@ -103,12 +103,6 @@ func (vg *VueGlue) guardedFileServer(serveDir fs.FS) http.Handler {
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}
-
-			// temp
-			items, _ := fs.Glob(newDir, "*")
-			log.Println(items)
-			// end temp
-
 			loggingFS = logRequest(http.FileServer(http.FS(newDir)))
 			fileServer = loggingFS
 

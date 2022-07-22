@@ -10,7 +10,7 @@ import (
 const (
 	DEFAULT_VITE_VERSION = "3"
 	DEFAULT_PORT_V2      = "3000"
-	DEFAULT_PORT_V3      = "5173"
+	DEFAULT_PORT_V3      = "5137"
 )
 
 // type ViteConfig passes info needed to generate the library's
