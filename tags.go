@@ -13,8 +13,12 @@ func (vg *VueGlue) RenderTags() (template.HTML, error) {
 	if vg.Environment == "development" {
 		if vg.Platform == "react" {
 			// react requires some extra help to load
-			tags += `
-    <script src="/src/preamble.js"></script>
+			tags += `<script type="module">
+				import { injectIntoGlobalHook } from "{{.BaseURL}}/@react-refresh";
+				injectIntoGlobalHook(window);
+				window.$RefreshReg$ = () => {};
+				window.$RefreshSig$ = () => (type) => type;
+			</script>
             `
 		}
 		tags += `
