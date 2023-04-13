@@ -33,6 +33,11 @@ type ViteConfig struct {
 	// root of your project. Default: frontend
 	JSProjectPath string
 
+	// JSInExternalDir denotes that you keep your JS project source
+	// in a folder located external to your go project source.
+	// Default: false
+	JSInExternalDir bool
+
 	//AssetsPath relative to the JSProjectPath. Empty for dev, dist for prod
 	AssetsPath string
 

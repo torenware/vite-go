@@ -1,11 +1,12 @@
 package vueglue
 
 import (
-	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
+	"os"
+	"path/filepath"
 	"regexp"
 )
 
@@ -35,12 +36,18 @@ type JSAppParams struct {
 }
 
 func (vc *ViteConfig) parsePackageJSON() (*PackageJSON, error) {
+	var buf []byte
+	var err error
+	path := filepath.Join(vc.JSProjectPath, "package.json")
 	// If not set, try and find package.json
-	path := ""
-	if _, ok := vc.FS.(embed.FS); ok {
-		path = vc.JSProjectPath + "/"
+	if vc.JSInExternalDir {
+		buf, err = os.ReadFile(path)
+	} else {
+		// The old code had a conditional for an embedded file system,
+		// but, if not using embed, left the path blank, taking control
+		// away from the user of the library.
+		buf, err = fs.ReadFile(vc.FS, path)
 	}
-	buf, err := fs.ReadFile(vc.FS, path+"package.json")
 	if err != nil {
 		return nil, err
 	}
