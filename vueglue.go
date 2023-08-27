@@ -3,6 +3,7 @@ package vueglue
 import (
 	"embed"
 	"errors"
+	"html/template"
 	"io/fs"
 )
 
@@ -181,7 +182,7 @@ func NewVueGlue(config *ViteConfig) (*VueGlue, error) {
 		if err != nil {
 			return nil, err
 		}
-		glue.BaseURL = config.buildDevServerBaseURL()
+		glue.BaseURL = template.JSEscapeString(config.buildDevServerBaseURL())
 		glue.MainModule = config.EntryPoint
 	}
 
