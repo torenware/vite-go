@@ -10,11 +10,24 @@ import (
 func (vg *VueGlue) RenderTags() (template.HTML, error) {
 	var tags string
 
+	tplPayload := struct {
+		*VueGlue
+		ReactRefreshURL template.JSStr
+	}{
+		VueGlue:         vg,
+		ReactRefreshURL: template.JSStr(vg.BaseURL + "/@react-refresh"),
+	}
+
 	if vg.Environment == "development" {
 		if vg.Platform == "react" {
 			// react requires some extra help to load
-			tags += `
-    <script src="/src/preamble.js"></script>
+			tags += `<script type="module">
+				import RefreshRuntime from {{.ReactRefreshURL}};
+				RefreshRuntime.injectIntoGlobalHook(window)
+				window.$RefreshReg$ = () => {}
+				window.$RefreshSig$ = () => (type) => type
+				window.__vite_plugin_react_preamble_installed__ = true
+			</script>
             `
 		}
 		tags += `
@@ -37,7 +50,7 @@ func (vg *VueGlue) RenderTags() (template.HTML, error) {
 		return "", err
 	}
 	var buffer bytes.Buffer
-	tmpl.Execute(&buffer, vg)
+	tmpl.Execute(&buffer, tplPayload)
 
 	return template.HTML(buffer.String()), nil
 }
